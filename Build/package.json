@@ -62,7 +62,7 @@
     "postcss-banner": "^4.0.1",
     "postcss-clean": "^1.2.2",
     "postcss-scss": "^4.0.9",
-    "rollup": "^4.17.2",
+    "rollup": "^4.37.0",
     "rollup-plugin-glob-import": "^0.5.0",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-svg": "^2.0.0",
