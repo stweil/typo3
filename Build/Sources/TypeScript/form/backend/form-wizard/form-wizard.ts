@@ -24,11 +24,13 @@ import {
 } from '@typo3/form/backend/form-wizard/finisher/duplicate-form-submission-service';
 import ModeStep, { type MODE } from '@typo3/form/backend/form-wizard/steps/mode-step';
 import { CreateFormSubmissionService } from '@typo3/form/backend/form-wizard/finisher/create-form-submission-service';
-import { FormManager } from '@typo3/form/backend/form-manager';
+import { FormManager, type StorageAdapter } from '@typo3/form/backend/form-manager';
 import { AutoAdvanceEvent } from '@typo3/backend/wizard/events/auto-advance-event';
+import { StorageStep } from '@typo3/form/backend/form-wizard/steps/storage-step';
 
 export interface FormWizardDataStore extends DataStore {
   mode?: MODE;
+  storage?: StorageAdapter;
   settings?: FormSettings;
 }
 
@@ -68,7 +70,7 @@ export class FormWizard extends LitElement {
   protected override firstUpdated(_changedProperties: PropertyValues) {
     super.firstUpdated(_changedProperties);
 
-    if (this.formManager.getAccessibleFormStorageFolders().length < 1) {
+    if (this.formManager.getAccessibleStorageAdapters().length < 1) {
       this.errorMessage = formManagerLabels.get('formManager.newFormWizard.step1.noStorages');
       return;
     }
@@ -84,10 +86,10 @@ export class FormWizard extends LitElement {
     };
 
     if (this.duplicateForm != null) {
-      this.steps = [new SettingsStep(context)];
+      this.steps = [new StorageStep(context), new SettingsStep(context)];
       this.submissionService = new DuplicateFormSubmissionService(context, this.duplicateForm.persistenceIdentifier);
     } else {
-      this.steps = [new ModeStep(context), new SettingsStep(context)];
+      this.steps = [new ModeStep(context), new StorageStep(context), new SettingsStep(context)];
       this.submissionService = new CreateFormSubmissionService(context);
     }
   }

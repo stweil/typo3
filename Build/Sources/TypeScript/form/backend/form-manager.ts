@@ -22,6 +22,16 @@ export interface LabelValuePair {
   value: string;
 }
 
+export interface StorageAdapter {
+  label: string;
+  description: string;
+  typeIdentifier: string;
+  iconIdentifier: string;
+  options?: {
+    allowedStorageLocations?: LabelValuePair[],
+  };
+}
+
 export type FormManagerConfiguration = {
   selectablePrototypesConfiguration?: Array<{
     label: string;
@@ -31,10 +41,10 @@ export type FormManagerConfiguration = {
       templatePath: string;
     }>;
   }>,
-  accessibleFormStorageFolders?: LabelValuePair[],
   endpoints?: {
     [key: string]: string;
   },
+  accessibleStorageAdapters?: StorageAdapter[],
 };
 
 export function assert(test: boolean|(() => boolean), message: string, messageCode: number): void {
@@ -112,17 +122,24 @@ export class FormManager {
     return templates;
   }
 
-  public getAccessibleFormStorageFolders(): LabelValuePair[] {
-    if (!Array.isArray(this.configuration.accessibleFormStorageFolders)) {
+  public getAccessibleStorageAdapters(): StorageAdapter[] {
+    if (!Array.isArray(this.configuration.accessibleStorageAdapters)) {
       return [];
     }
 
-    return this.configuration.accessibleFormStorageFolders.map((folder): LabelValuePair => {
-      return {
-        label: folder.label,
-        value: folder.value,
-      };
-    });
+    return this.configuration.accessibleStorageAdapters;
+  }
+
+  public getAccessibleStorageLocationsForAdapter(storageAdapter: StorageAdapter): LabelValuePair[] {
+    const adapter = this.configuration.accessibleStorageAdapters?.find(
+      (adapter) => adapter.typeIdentifier === storageAdapter.typeIdentifier
+    );
+
+    if (!adapter || !adapter.options?.allowedStorageLocations) {
+      return [];
+    }
+
+    return adapter.options.allowedStorageLocations;
   }
 
   /**

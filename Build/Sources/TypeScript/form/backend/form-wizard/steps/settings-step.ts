@@ -22,7 +22,7 @@ import type { FormWizardContext } from '@typo3/form/backend/form-wizard/form-wiz
 
 export interface FormSettings {
   formName?: string,
-  savePath?: string,
+  storageLocation?: string,
   prototype?: string,
   template?: string,
 }
@@ -34,7 +34,7 @@ export class SettingsStep implements WizardStepInterface, WizardStepValueInterfa
 
   private data: FormSettings = {
     formName: '',
-    savePath: '',
+    storageLocation: '',
     prototype: '',
     template: '',
   };
@@ -58,7 +58,7 @@ export class SettingsStep implements WizardStepInterface, WizardStepValueInterfa
   public reset(): void {
     this.setValue({
       formName: '',
-      savePath: this.context.formManager.getAccessibleFormStorageFolders()[0]?.value ?? '',
+      storageLocation: '',
     });
     this.setPrototype(this.context.formManager.getPrototypes()[0]?.value ?? '');
     this.context.clearStoreData(this.key);
@@ -85,13 +85,21 @@ export class SettingsStep implements WizardStepInterface, WizardStepValueInterfa
     const config = this.context.getStoreData(this.key);
 
     const prototypeLabel = this.context.formManager.getPrototypes()
-      .find(p => p.value = config.prototype)?.label;
+      .find(p => p.value === config.prototype)?.label;
 
     const templateLabel = this.context.formManager.getTemplatesForPrototype(config.prototype)
       .find(t => t.value === config.template)
       ?.label;
 
     const isPredefined = this.context.getStoreData('mode') === MODE.Predefined;
+
+    // Resolve storage location value to its human-readable label
+    const storageAdapter = this.context.getStoreData('storage');
+    const storageLocations = storageAdapter
+      ? this.context.formManager.getAccessibleStorageLocationsForAdapter(storageAdapter)
+      : [];
+    const storageLocationLabel = storageLocations.find(l => l.value === config.storageLocation)?.label
+      ?? config.storageLocation;
 
     return [
       ...(isPredefined
@@ -111,29 +119,36 @@ export class SettingsStep implements WizardStepInterface, WizardStepValueInterfa
         label: formManagerLabels.get('formManager.form_name')
       },
       {
-        value: config.savePath,
-        label: formManagerLabels.get('formManager.form_save_path')
+        value: storageLocationLabel,
+        label: formManagerLabels.get('formManager.form_storageLocation')
       }
     ];
   }
 
   private renderSavePath(): TemplateResult | typeof nothing {
-    const storageFolders = this.context.formManager.getAccessibleFormStorageFolders() ?? [];
+    const storageLocations = this.context.formManager.getAccessibleStorageLocationsForAdapter(this.context.getStoreData('storage')) ?? [];
 
-    if (storageFolders.length <= 1) {
+    if (storageLocations.length <= 1) {
+      this.setValue({ storageLocation: storageLocations[0]?.value ?? '' });
       return nothing;
+    }
+
+    // Auto-select first location if none selected yet
+    if (!this.data.storageLocation && storageLocations.length > 0) {
+      this.setValue({ storageLocation: storageLocations[0].value });
     }
 
     return html `
       <div class="form-group">
-        <label class="form-label" for="new-form-save-path">${formManagerLabels.get('formManager.form_save_path')}</label>
-        <div class="form-description">${formManagerLabels.get('formManager.form_save_path_description')}</div>
-        <select class="new-form-save-path form-select" id="new-form-save-path" data-identifier="newFormSavePath">
-          ${storageFolders.map(option => html`
+        <label class="form-label" for="new-form-save-path">${formManagerLabels.get('formManager.form_storageLocation')}</label>
+        <div class="form-description">${formManagerLabels.get('formManager.form_storageLocation_description')}</div>
+        <select class="new-form-save-path form-select" id="new-form-save-path" data-identifier="newFormSavePath"
+          @change=${(e: Event) => this.setValue({ storageLocation: (e.target as HTMLSelectElement).value })}
+        >
+          ${storageLocations.map(option => html`
             <option
-              value=${option.label}
-              ?selected=${option.value === this.data.savePath}
-              @change=${(e: Event) => this.setValue({ savePath: (e.target as HTMLOptionElement).value })}
+              value=${option.value}
+              ?selected=${option.value === this.data.storageLocation}
             >
               ${option.label}
             </option>
@@ -176,7 +191,7 @@ export class SettingsStep implements WizardStepInterface, WizardStepValueInterfa
           <select class="new-form-template form-select"
                   id="new-form-template"
                   data-identifier="newFormTemplate"
-                  @change=${(e: Event) => this.setValue({ template: (e.target as HTMLOptionElement).value })}
+                  @change=${(e: Event) => this.setValue({ template: (e.target as HTMLSelectElement).value })}
           >
             ${templates.map(option => html`
               <option

@@ -30,7 +30,8 @@ export class CreateFormSubmissionService implements SubmissionServiceInterface {
         formName: dataStore.settings.formName,
         templatePath: dataStore.settings.template,
         prototypeName: dataStore.settings.prototype,
-        savePath: dataStore.settings.savePath
+        storage: dataStore.storage.typeIdentifier,
+        storageLocation: dataStore.settings.storageLocation
       });
     const data: {status: string, url?: string, message?: ''} = await response.resolve();
 
