@@ -15,6 +15,7 @@
  * Module: @typo3/form/backend/form-editor/view-model
  */
 import $ from 'jquery';
+import { cloneDeep } from 'lodash-es';
 import * as TreeComponent from '@typo3/form/backend/form-editor/tree-component-adapter';
 import * as ModalsComponent from '@typo3/form/backend/form-editor/modals-component';
 import * as InspectorComponent from '@typo3/form/backend/form-editor/inspector-component';
@@ -491,7 +492,7 @@ export function getFormElementDefinition<T extends keyof FormElementDefinition>(
 }
 
 export function getConfiguration(): Partial<HelperConfiguration> {
-  return $.extend(true, {}, configuration);
+  return cloneDeep(configuration);
 }
 
 export function getPreviewMode(): boolean {

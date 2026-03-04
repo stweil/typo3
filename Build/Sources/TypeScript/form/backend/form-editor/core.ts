@@ -14,9 +14,9 @@
 /**
  * Module: @typo3/form/backend/form-editor/core
  */
-import $ from 'jquery';
 import AjaxRequest from '@typo3/core/ajax/ajax-request';
 import { AjaxResponse } from '@typo3/core/ajax/ajax-response';
+import { cloneDeep } from 'lodash-es';
 
 export type EditorConfiguration = {
   identifier: string,
@@ -886,7 +886,7 @@ export class Model<D extends object, T extends ModelData<D>> {
 
   public getObjectData(): T {
     // Return dereferenced object
-    return $.extend(true, {}, this.objectData);
+    return cloneDeep(this.objectData);
   }
 
   public toString(): string {
@@ -991,7 +991,7 @@ export class Repository {
     assert(utility.isNonEmptyString(definitionName), 'Invalid parameter "definitionName"', 1475364952);
     assert(utility.isNonEmptyString(subject), 'Invalid parameter "subject"', 1475364953);
     // Return dereferenced object
-    return $.extend(true, {}, this.formEditorDefinitions[definitionName][subject]);
+    return cloneDeep(this.formEditorDefinitions[definitionName][subject]);
   }
 
   public getRootFormElement(): RootFormElement {
@@ -1901,8 +1901,8 @@ export class ApplicationStateStack {
     assert(typeof applicationState === 'object' && applicationState !== null && !Array.isArray(applicationState), 'Invalid parameter "applicationState"', 1477847415);
     disablePublishersOnSet = !!disablePublishersOnSet;
 
-    $.extend(applicationState, {
-      propertyValidationServiceRegisteredValidators: $.extend(true, {}, this.getCurrentState('propertyValidationServiceRegisteredValidators'))
+    Object.assign(applicationState, {
+      propertyValidationServiceRegisteredValidators: cloneDeep(this.getCurrentState('propertyValidationServiceRegisteredValidators') ?? {})
     });
 
     this.stack.splice(0, 0, applicationState);

@@ -14,9 +14,9 @@
 /**
  * Module: @typo3/form/backend/form-editor
  */
-import $ from 'jquery';
 import Notification from '@typo3/backend/notification';
 import * as Core from '@typo3/form/backend/form-editor/core';
+import { cloneDeep } from 'lodash-es';
 import type { JavaScriptItemPayload } from '@typo3/core/java-script-item-processor';
 import type {
   ApplicationStateStack,
@@ -352,7 +352,7 @@ export class FormEditor {
       assert(!this.getUtility().isUndefinedOrNull(collection), 'Invalid collection name "' + collectionName + '"', 1475446108);
       collectionElement = this.getRepository().findCollectionElementByIdentifierPath(collectionElementIdentifier, collection);
       // Return a dereferenced object
-      return $.extend(true, {}, collectionElement);
+      return cloneDeep(collectionElement);
     } else {
       return {} as CollectionEntry;
     }
@@ -535,14 +535,14 @@ export class FormEditor {
     if (formElementDefinitionKey !== undefined/* && formElementDefinitionKey !== null*/) {
       const formElementDefinitionEntry = formElementDefinition[formElementDefinitionKey];
       if (formElementDefinitionEntry !== null && (typeof formElementDefinitionEntry === 'object')) {
-        return $.extend(true, {}, formElementDefinitionEntry);
+        return cloneDeep(formElementDefinitionEntry) as R;
       } else {
         return formElementDefinitionEntry as R;
       }
     }
 
     if (formElementDefinition !== null && (typeof formElementDefinition === 'object')) {
-      return $.extend(true, {}, formElementDefinition);
+      return cloneDeep(formElementDefinition) as R;
     } else {
       return formElementDefinition as R;
     }
@@ -571,7 +571,7 @@ export class FormEditor {
 
     const validatorDefinition = this.getRepository().getFormEditorDefinition('formElementPropertyValidators', validatorIdentifier);
     // Return a dereferenced object
-    return $.extend(true, {}, validatorDefinition);
+    return cloneDeep(validatorDefinition);
   }
 
   public getCurrentlySelectedPageIndex(): number {
@@ -681,6 +681,7 @@ export class FormEditor {
       if (!(error instanceof Error)) {
         throw error;
       }
+      console.error('Form editor error:', error);
       Notification.error(
         failsafeLabels.get('formEditor.error.headline'),
         failsafeLabels.get('formEditor.error.message')

@@ -15,6 +15,7 @@
  * Module: @typo3/form/backend/form-editor/helper
  */
 import $ from 'jquery';
+import { merge } from 'lodash-es';
 import type {
   FormEditor,
 } from '@typo3/form/backend/form-editor';
@@ -79,7 +80,7 @@ export function setConfiguration(
   customConfiguration: Partial<Configuration>
 ): typeof import('./helper') {
   assert(typeof customConfiguration === 'object' && customConfiguration !== null && !Array.isArray(customConfiguration), 'Invalid parameter "partialConfiguration"', 1478950623);
-  configuration = $.extend(true, defaultConfiguration, customConfiguration);
+  configuration = merge({}, defaultConfiguration, customConfiguration) as Configuration;
   return this;
 }
 

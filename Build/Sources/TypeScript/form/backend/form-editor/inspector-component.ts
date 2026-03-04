@@ -18,6 +18,7 @@
 import $ from 'jquery';
 import type { Configuration as HelperConfiguration } from '@typo3/form/backend/form-editor/helper';
 import * as Helper from '@typo3/form/backend/form-editor/helper';
+import { merge } from 'lodash-es';
 import Icons from '@typo3/backend/icons';
 import Modal from '@typo3/backend/modal';
 import { MessageUtility } from '@typo3/backend/utility/message-utility';
@@ -62,6 +63,7 @@ const defaultConfiguration: Configuration = {
     finisherEditorPrefix: 't3-form-inspector-finishers-editor-',
     inspectorEditor: 'formeditor-inspector-element',
     inspectorInputGroup: 'input-group',
+    sortable: 'sortable',
     validatorEditorPrefix: 'formeditor-inspector-validators-editor-'
   },
   domElementDataAttributeNames: {
@@ -2381,7 +2383,7 @@ export function bootstrap(
   customConfiguration?: Configuration
 ): typeof import('./inspector-component') {
   formEditorApp = _formEditorApp;
-  configuration = $.extend(true, defaultConfiguration, customConfiguration || {});
+  configuration = merge({}, defaultConfiguration, customConfiguration ?? {}) as Configuration;
   Helper.bootstrap(formEditorApp);
   return this;
 }

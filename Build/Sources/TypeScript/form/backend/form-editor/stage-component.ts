@@ -16,6 +16,7 @@
  */
 import $ from 'jquery';
 import * as Helper from '@typo3/form/backend/form-editor/helper';
+import { merge } from 'lodash-es';
 import Icons from '@typo3/backend/icons';
 import Sortable from 'sortablejs';
 import type { FormElementStageItem, Validator, SelectOption } from '@typo3/form/backend/form-editor/component/form-element-stage-item';
@@ -1016,7 +1017,7 @@ export function bootstrap(
   formEditorApp = _formEditorApp;
   assert(typeof appendToDomElement === 'object' && appendToDomElement !== null && !Array.isArray(appendToDomElement), 'Invalid parameter "appendToDomElement"', 1478992119);
   stageDomElement = $(appendToDomElement);
-  configuration = $.extend(true, defaultConfiguration, customConfiguration || {});
+  configuration = merge({}, defaultConfiguration, customConfiguration ?? {}) as Configuration;
   Helper.bootstrap(formEditorApp);
   return this;
 }

@@ -16,6 +16,7 @@
  */
 import $ from 'jquery';
 import * as Helper from '@typo3/form/backend/form-editor/helper';
+import { merge } from 'lodash-es';
 import Modal, { type Button } from '@typo3/backend/modal';
 import Severity from '@typo3/backend/severity';
 import type {
@@ -410,7 +411,7 @@ export function bootstrap(
   customConfiguration?: Partial<HelperConfiguration>
 ): typeof import('./modals-component') {
   formEditorApp = _formEditorApp;
-  configuration = $.extend(true, defaultConfiguration, customConfiguration || {});
+  configuration = merge({}, defaultConfiguration, customConfiguration ?? {}) as HelperConfiguration;
   Helper.bootstrap(formEditorApp);
   return this;
 }
