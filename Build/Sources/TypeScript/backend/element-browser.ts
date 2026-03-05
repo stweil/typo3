@@ -108,7 +108,7 @@ class ElementBrowser {
       }
 
       // Verify the resolved opener contains the edit form (e.g. when editing
-      // in a context panel iframe, list_frame resolves to the content frame
+      // in a modal iframe, list_frame resolves to the content frame
       // which is the wrong window). Fall back to searching all frames in top.
       if (this.opener && !this.windowHasEditForm(this.opener)) {
         const editFormWindow = this.findEditFormWindow();

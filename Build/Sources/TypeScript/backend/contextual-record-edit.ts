@@ -28,7 +28,7 @@ type ContextualRecordEditOptions = {
  * Module: @typo3/backend/contextual-record-edit
  *
  * Handles communication between a FormEngine form rendered in contextual mode
- * (inside a context panel iframe) and the parent frame. Wires up Save/Close
+ * (inside a modal iframe) and the parent frame. Wires up Save/Close
  * buttons and sends postMessage events to the parent on save and close.
  *
  * @exports @typo3/backend/contextual-record-edit
@@ -79,7 +79,7 @@ class ContextualRecordEdit {
         // Navigate the content frame directly (same-origin access) — using
         // postMessage for this failed silently in Firefox.
         top?.TYPO3?.Backend?.ContentContainer?.setUrl(this.fullscreenButton.href);
-        // Tell the parent to close the context panel
+        // Tell the parent to close the modal
         window.parent.postMessage(
           { actionName: 'typo3:editform:navigate' },
           window.location.origin

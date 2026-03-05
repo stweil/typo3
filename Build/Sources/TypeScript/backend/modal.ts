@@ -43,6 +43,7 @@ export enum Sizes {
   medium = 'medium',
   large = 'large',
   full = 'full',
+  expand = 'expand',
 }
 
 export enum Positions {
@@ -51,6 +52,7 @@ export enum Positions {
   end = 'end',
   bottom = 'bottom',
   start = 'start',
+  sheet = 'sheet',
 }
 
 export enum Styles {
@@ -142,7 +144,10 @@ export class ModalElement extends LitElement {
   }
 
   protected async doHideModal(): Promise<void> {
-    this.trigger('typo3-modal-hide');
+    const event = this.trigger('typo3-modal-hide', true);
+    if (event.defaultPrevented) {
+      return;
+    }
 
     // Add closing class to trigger animation
     this.dialog.classList.add('modal-closing');
@@ -345,8 +350,10 @@ export class ModalElement extends LitElement {
     `;
   }
 
-  private trigger(event: string): void {
-    this.dispatchEvent(new CustomEvent(event, { bubbles: true, composed: true }));
+  private trigger(event: string, cancelable: boolean = false): CustomEvent {
+    const customEvent = new CustomEvent(event, { bubbles: true, composed: true, cancelable });
+    this.dispatchEvent(customEvent);
+    return customEvent;
   }
 
   /**

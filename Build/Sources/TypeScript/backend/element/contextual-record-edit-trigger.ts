@@ -13,7 +13,7 @@
 
 import { customElement, property } from 'lit/decorators.js';
 import { PseudoButtonLitElement } from '@typo3/backend/element/pseudo-button';
-import { createContextPanel, Sizes, Placements, type ContextPanelElement } from '@typo3/backend/element/context-panel';
+import Modal, { Types, Sizes, Positions, type ModalElement } from '@typo3/backend/modal';
 import Notification from '@typo3/backend/notification';
 import Persistent from '@typo3/backend/storage/persistent';
 import labels from '~labels/backend.alt_doc';
@@ -21,16 +21,12 @@ import labels from '~labels/backend.alt_doc';
 /**
  * Module: @typo3/backend/element/contextual-record-edit-trigger
  *
- * A trigger that opens a record for editing in the context panel.
- * The `url` attribute points to the contextual edit route (context
- * panel), `edit-url` points to the full FormEngine route.
+ * A trigger that opens a record for editing in a sheet when
+ * the user setting `contextualRecordEdit` is enabled and in
+ * the content frame when disabled.
  *
- * When the user setting `contextualRecordEdit` is enabled
- * (default), the record opens in the context panel via `url`.
- * Otherwise, `edit-url` is loaded in the content frame.
- *
- * The optional `placement` attribute controls the slide-in direction:
- * `end` (default, right), `start` (left), `top`, or `bottom`.
+ * `url` attribute points to the contextual edit route
+ * `edit-url` points to the full FormEngine route.
  *
  * @example
  * <typo3-backend-contextual-record-edit-trigger
@@ -43,7 +39,6 @@ import labels from '~labels/backend.alt_doc';
 export class ContextualRecordEditTriggerElement extends PseudoButtonLitElement {
   @property({ type: String }) url: string;
   @property({ type: String, attribute: 'edit-url' }) editUrl: string;
-  @property({ type: String }) placement: string = Placements.end;
 
   protected override async buttonActivated(): Promise<void> {
     if (Persistent.isset('contextualRecordEdit') && Persistent.get('contextualRecordEdit') == 0) {
@@ -52,17 +47,21 @@ export class ContextualRecordEditTriggerElement extends PseudoButtonLitElement {
       }
       return;
     }
-    const panel = await createContextPanel({
-      url: this.url,
-      size: Sizes.medium,
-      placement: (this.placement as Placements) || Placements.end,
+    const modal = Modal.advanced({
+      type: Types.iframe,
+      title: '',
+      content: this.url,
+      size: Sizes.expand,
+      position: Positions.sheet,
+      hideHeader: true,
     });
-    this.setupMessageHandling(panel);
+    this.setupMessageHandling(modal);
   }
 
-  private setupMessageHandling(panel: ContextPanelElement): void {
+  private setupMessageHandling(modal: ModalElement): void {
     const messageTarget = top;
     let savedRecordTitle = '';
+    let closeConfirmed = false;
     const messageHandler = (event: MessageEvent): void => {
       if (event.origin !== window.location.origin) {
         return;
@@ -71,26 +70,30 @@ export class ContextualRecordEditTriggerElement extends PseudoButtonLitElement {
         savedRecordTitle = event.data.recordTitle ?? '';
       }
       if (event.data?.actionName === 'typo3:editform:closed') {
-        panel.close();
+        closeConfirmed = true;
+        modal.hideModal();
       }
       if (event.data?.actionName === 'typo3:editform:navigate') {
-        panel.close();
+        closeConfirmed = true;
+        modal.hideModal();
       }
     };
     messageTarget.addEventListener('message', messageHandler);
 
-    panel.addEventListener('typo3-context-panel-close-request', (e: Event): void => {
+    modal.addEventListener('typo3-modal-hide', (e: Event): void => {
+      if (closeConfirmed) {
+        return;
+      }
       e.preventDefault();
-      const iframe = panel.querySelector('iframe') as HTMLIFrameElement | null;
+      const iframe = modal.querySelector('iframe') as HTMLIFrameElement | null;
       iframe?.contentWindow?.postMessage(
         { actionName: 'typo3:editform:requestclose' },
         window.location.origin
       );
     });
 
-    panel.addEventListener('typo3-context-panel-hidden', () => {
+    modal.addEventListener('typo3-modal-hidden', () => {
       messageTarget.removeEventListener('message', messageHandler);
-      panel.remove();
       if (savedRecordTitle !== '') {
         top.document.dispatchEvent(new CustomEvent('typo3:pagetree:refresh'));
         if (top.TYPO3?.Backend?.ContentContainer) {

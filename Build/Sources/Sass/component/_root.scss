@@ -589,6 +589,10 @@
                 );
             z-index: calc(var(--typo3-zindex-header) + 2);
         }
+
+        .modal-position-sheet {
+            --typo3-modal-border-radius: 1rem;
+        }
     }
 }
 

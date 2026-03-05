@@ -22,8 +22,8 @@ test('Switch between languages in "Open in new window"', async ({
         .getByRole('button', { name: 'Edit page properties' })
         .click();
 
-      // Wait for context panel iframe and navigate to full edit view
-      const contextPanel = page.frameLocator('iframe[name="context_panel_frame"]');
+      // Wait for modal iframe and navigate to full edit view
+      const contextPanel = page.frameLocator('iframe[name="modal_frame"]');
       await expect(contextPanel.locator('.contextual-record-edit')).toBeVisible();
       await contextPanel
         .getByTitle('Open full editing view')

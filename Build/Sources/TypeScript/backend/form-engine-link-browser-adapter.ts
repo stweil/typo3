@@ -123,7 +123,7 @@ export default (function() {
     }
 
     // Verify the resolved opener contains the target form (e.g. when editing
-    // in a context panel iframe, list_frame resolves to the content frame
+    // in a modal iframe, list_frame resolves to the content frame
     // which is the wrong window). Fall back to searching all frames in top.
     const formName = LinkBrowser.parameters?.formName;
     if (formName && !FormEngineLinkBrowserAdapter.windowHasForm(opener, formName)) {
