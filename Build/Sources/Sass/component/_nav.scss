@@ -1,147 +1,122 @@
 //
 // Nav
 //
-.nav {
+.nav,
+typo3-backend-tab-scroller {
+    --typo3-nav-color: var(--typo3-component-color);
+    --typo3-nav-bg: transparent;
+    --typo3-nav-border-color: var(--typo3-component-border-color);
+    --typo3-nav-border-width: var(--typo3-component-border-width);
+    --typo3-nav-border-radius: var(--typo3-component-border-radius);
+    --typo3-nav-font-size: var(--typo3-font-size);
+    --typo3-nav-link-border-radius: var(--typo3-nav-border-radius);
     --typo3-nav-link-padding-x: 1rem;
     --typo3-nav-link-padding-y: .5rem;
-    --typo3-nav-link-font-size: var(--typo3-font-size);
-    --typo3-nav-link-font-weight: normal;
     --typo3-nav-link-color: var(--typo3-text-color-link);
+    --typo3-nav-link-bg: transparent;
+    --typo3-nav-link-border-color: transparent;
     --typo3-nav-link-hover-color: var(--typo3-text-color-link);
+    --typo3-nav-link-hover-bg: transparent;
+    --typo3-nav-link-hover-border-color: transparent;
+    --typo3-nav-link-focus-color: var(--typo3-text-color-link);
+    --typo3-nav-link-focus-bg: transparent;
+    --typo3-nav-link-focus-border-color: transparent;
+    --typo3-nav-link-danger-color: var(--typo3-text-color-danger);
+    --typo3-nav-link-danger-bg: transparent;
+    --typo3-nav-link-danger-border-color: transparent;
+    --typo3-nav-link-active-color: var(--typo3-text-color-primary);
+    --typo3-nav-link-active-bg: transparent;
+    --typo3-nav-link-active-border-color: var(--typo3-state-primary-border-color);
     --typo3-nav-link-disabled-color: var(--typo3-text-color-variant);
-    --typo3-nav-link-focusring-base-color: var(--typo3-nav-link-color);
+    --typo3-nav-link-disabled-bg: transparent;
+    --typo3-nav-link-disabled-border-color: transparent;
+}
+
+.nav {
     display: flex;
     gap: 1px;
     flex-wrap: wrap;
     padding-inline: 0;
     margin-bottom: 0;
     list-style: none;
-    font-size: var(--typo3-nav-link-font-size);
+    font-size: var(--typo3-nav-font-size);
+    background-color: var(--typo3-nav-bg);
 }
 
 .nav-link {
+    --typo3-nav-link-state-color: var(--typo3-nav-link-color);
+    --typo3-nav-link-state-bg: var(--typo3-nav-link-bg);
+    --typo3-nav-link-state-border-color: var(--typo3-nav-link-border-color);
     display: block;
+    position: relative;
     padding: var(--typo3-nav-link-padding-y) var(--typo3-nav-link-padding-x);
-    font-size: var(--typo3-nav-link-font-size);
-    font-weight: var(--typo3-nav-link-font-weight);
-    color: var(--typo3-nav-link-color);
-    background: none;
+    color: var(--typo3-nav-link-state-color);
+    background: var(--typo3-nav-link-state-bg);
+    border-color: var(--typo3-nav-link-state-border-color);
+    border-radius: var(--typo3-nav-link-border-radius);
     border: 0;
+    outline-offset: 0;
+    white-space: nowrap;
     transition:
         color .2s ease-in-out,
         background-color .2s ease-in-out,
         border-color .2s ease-in-out;
-    outline-offset: 0;
 
-    &:hover,
+    &:hover {
+        --typo3-nav-link-state-color: var(--typo3-nav-link-hover-color);
+        --typo3-nav-link-state-bg: var(--typo3-nav-link-hover-bg);
+        --typo3-nav-link-state-border-color: var(--typo3-nav-link-hover-border-color);
+        text-decoration: underline;
+    }
+
     &:focus {
-        color: var(--typo3-nav-link-hover-color);
+        --typo3-nav-link-state-color: var(--typo3-nav-link-focus-color);
+        --typo3-nav-link-state-bg: var(--typo3-nav-link-focus-bg);
+        --typo3-nav-link-state-border-color: var(--typo3-nav-link-focus-border-color);
         text-decoration: underline;
     }
 
     &:focus-visible {
-        outline: var(--typo3-outline-width) var(--typo3-outline-style) color-mix(in srgb, var(--typo3-nav-link-focusring-base-color), transparent 25%);
+        outline: var(--typo3-outline-width) var(--typo3-outline-style) color-mix(in srgb, var(--typo3-nav-link-state-color), var(--typo3-nav-link-state-bg));
     }
 
-    // Disabled state lightens text
-    &.disabled,
-    &[disabled] {
-        color: var(--typo3-nav-link-disabled-color);
-        pointer-events: none;
-        cursor: default;
-    }
-}
-
-//
-// Tabs
-//
-.nav-tabs {
-    --typo3-nav-tabs-color: var(--typo3-component-color);
-    --typo3-nav-tabs-bg: var(--typo3-component-bg);
-    --typo3-nav-tabs-border-color: color-mix(in srgb, var(--typo3-nav-tabs-bg), var(--typo3-nav-tabs-color) var(--typo3-border-mix));
-    --typo3-nav-tabs-border-width: var(--typo3-component-border-width);
-    --typo3-nav-tabs-border-radius: var(--typo3-component-border-radius);
-    position: relative;
-    gap: 3px 2px;
-    z-index: 1;
-    border-bottom: var(--typo3-nav-tabs-border-width) solid var(--typo3-nav-tabs-border-color);
-
-    .nav-link {
-        --typo3-nav-tabs-link-state-color: initial;
-        --typo3-nav-tabs-link-state-bg: initial;
-        --typo3-nav-tabs-link-color: var(--typo3-nav-tabs-link-state-color, var(--typo3-nav-tabs-color));
-        --typo3-nav-tabs-link-bg: var(--typo3-nav-tabs-link-state-bg, color-mix(in srgb, var(--typo3-nav-tabs-bg), currentColor 5%));
-        --typo3-nav-tabs-link-border-color: color-mix(in srgb, var(--typo3-nav-tabs-link-bg), var(--typo3-nav-tabs-link-color) var(--typo3-border-mix));
-        --typo3-nav-tabs-link-active-color: var(--typo3-nav-tabs-color);
-        --typo3-nav-tabs-link-active-bg: var(--typo3-nav-tabs-bg);
-        --typo3-nav-tabs-link-danger-color: var(--typo3-surface-container-danger-text);
-        --typo3-nav-tabs-link-danger-bg: var(--typo3-surface-container-danger);
-        --typo3-nav-tabs-link-danger-active-color: var(--typo3-nav-tabs-link-active-color);
-        --typo3-nav-tabs-link-danger-active-bg: var(--typo3-nav-tabs-link-active-bg);
-        --typo3-nav-link-focusring-base-color: var(--typo3-nav-tabs-link-border-color);
-        position: relative;
-        color: var(--typo3-nav-tabs-link-color);
-        background-color: var(--typo3-nav-tabs-link-bg);
-        margin-bottom: calc(-1 * var(--typo3-nav-tabs-border-width));
-        border: var(--typo3-nav-tabs-border-width) solid var(--typo3-nav-tabs-link-border-color);
-        border-start-start-radius: var(--typo3-nav-tabs-border-radius);
-        border-start-end-radius: var(--typo3-nav-tabs-border-radius);
-
-        &:focus,
-        &:hover {
-            text-decoration: none;
-            isolation: isolate;
-        }
-
-        &:hover {
-            background: color-mix(in srgb, var(--typo3-nav-tabs-link-bg), var(--typo3-nav-tabs-link-color) 6%);
-        }
-    }
-
-    .nav-link.active,
-    .nav-item.show .nav-link {
-        &,
-        &:hover {
-            --typo3-nav-tabs-link-state-color: var(--typo3-nav-tabs-link-active-color);
-            --typo3-nav-tabs-link-state-bg: var(--typo3-nav-tabs-link-active-bg);
-            background-color: var(--typo3-nav-tabs-link-bg);
-            border-bottom-color: var(--typo3-nav-tabs-link-bg);
-        }
-    }
-
-    .nav-item.has-validation-error .nav-link {
-        --typo3-nav-tabs-link-state-color: var(--typo3-nav-tabs-link-danger-color);
-        --typo3-nav-tabs-link-state-bg: var(--typo3-nav-tabs-link-danger-bg);
+    .nav-item.has-validation-error & {
+        --typo3-nav-link-state-color: var(--typo3-nav-link-danger-color);
+        --typo3-nav-link-state-bg: var(--typo3-nav-link-danger-bg);
+        --typo3-nav-link-state-border-color: var(--typo3-nav-link-danger-border-color);
         padding-inline-start: calc(var(--typo3-nav-link-padding-x) + 16px + .25rem);
 
-        &.active {
-            --typo3-nav-tabs-link-state-color: var(--typo3-nav-tabs-link-danger-active-color);
-            --typo3-nav-tabs-link-state-bg: var(--typo3-nav-tabs-link-danger-active-bg);
-        }
-
-        &:before,
-        &:after {
+        &:before {
             content: '';
             position: absolute;
             top: 50%;
-            inset-inline: var(--typo3-nav-link-padding-x);
-            transform: translate(0, -50%);
-            border-radius: 50%;
+            inset-inline-start: var(--typo3-nav-link-padding-x);
+            transform: translateY(-50%);
             width: 16px;
             height: 16px;
+            border-radius: 50%;
+            background: var(--typo3-state-danger-bg) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3ccircle cx='8' cy='11' r='1' fill='%23fff'/%3e%3cpath d='M8.5 9h-1l-.445-4.45A.5.5 0 0 1 7.552 4h.896a.5.5 0 0 1 .497.55L8.5 9z' fill='%23fff'/%3e%3c/svg%3e") center / contain no-repeat;
         }
+    }
 
-        &:before {
-            background-color: var(--typo3-state-danger-bg);
-        }
+    // When the element has errors but is active we want to see the
+    // active colors, due to the harder selectors it nessesary for
+    // now to add important to the assignments
+    .nav-item.show &,
+    &.active {
+        text-decoration: underline;
+        --typo3-nav-link-state-color: var(--typo3-nav-link-active-color) !important;
+        --typo3-nav-link-state-bg: var(--typo3-nav-link-active-bg) !important;
+        --typo3-nav-link-state-border-color: var(--typo3-nav-link-active-border-color) !important;
+    }
 
-        &:after {
-            background-color: var(--typo3-state-danger-color);
-            mask-repeat: no-repeat;
-            mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cg fill='%23fff'%3e%3ccircle cx='8' cy='11' r='1'/%3e%3cpath d='M8.5 9h-1l-.445-4.45A.5.5 0 0 1 7.552 4h.896a.5.5 0 0 1 .497.55L8.5 9z'/%3e%3c/g%3e%3c/svg%3e");
-            mask-position: center center;
-            mask-size: contain;
-        }
+    &.disabled,
+    &[disabled] {
+        --typo3-nav-link-state-color: var(--typo3-nav-link-disabled-color) !important;
+        --typo3-nav-link-state-bg: var(--typo3-nav-link-disabled-bg) !important;
+        --typo3-nav-link-state-border-color: var(--typo3-nav-link-disabled-border-color) !important;
+        pointer-events: none;
+        cursor: default;
     }
 }
 
@@ -149,19 +124,14 @@
 // Pills
 //
 .nav-pills {
-    --typo3-nav-pills-border-radius: var(--typo3-component-border-radius);
-    --typo3-nav-pills-link-active-color: var(--typo3-state-primary-color);
-    --typo3-nav-pills-link-active-bg: var(--typo3-state-primary-bg);
-
-    .nav-link {
-        border-radius: var(--typo3-nav-pills-border-radius);
-    }
+    --typo3-nav-link-danger-color: var(--typo3-state-danger-color);
+    --typo3-nav-link-danger-bg: var(--typo3-state-danger-bg);
+    --typo3-nav-link-active-color: var(--typo3-state-primary-color);
+    --typo3-nav-link-active-bg: var(--typo3-state-primary-bg);
+    gap: var(--typo3-outline-width);
 
     .nav-link.active,
-    .show > .nav-link {
-        --typo3-nav-link-focusring-base-color: var(--typo3-nav-pills-link-active-bg);
-        background-color: var(--typo3-nav-pills-link-active-bg);
-        color: var(--typo3-nav-pills-link-active-color);
+    .nav-item.show .nav-link {
         text-decoration: none;
     }
 }
@@ -169,7 +139,106 @@
 //
 // Tabs
 //
+.nav-tabs,
+typo3-backend-tab-scroller {
+    --typo3-nav-bg: var(--typo3-component-bg);
+    --typo3-outline-width: 1px;
+    --typo3-nav-border-width: 2px;
+    --typo3-nav-link-bg: var(--typo3-nav-bg);
+    --typo3-nav-link-hover-bg: color-mix(in srgb, var(--typo3-nav-bg), currentColor 5%);
+    --typo3-nav-link-focus-bg: color-mix(in srgb, var(--typo3-nav-bg), currentColor 7.5%);
+    --typo3-nav-link-active-bg: color-mix(in srgb, var(--typo3-nav-bg), currentColor 7.5%);
+}
+
+.nav-tabs {
+    position: relative;
+    flex-wrap: nowrap;
+    flex-grow: 1;
+    z-index: 1;
+    gap: 1px;
+    background: linear-gradient(var(--typo3-nav-border-color), var(--typo3-nav-border-color)) bottom / 100% var(--typo3-nav-border-width) no-repeat;
+
+    .nav-link {
+        border-end-start-radius: 0;
+        border-end-end-radius: 0;
+        outline-offset: -4px;
+        margin-bottom: var(--typo3-nav-border-width);
+
+        &:after {
+            display: block;
+            position: absolute;
+            bottom: calc(var(--typo3-nav-border-width) * -1);
+            left: 0;
+            right: 0;
+            height: var(--typo3-nav-border-width);
+            background-color: var(--typo3-nav-link-state-border-color);
+            content: '';
+        }
+    }
+
+    .nav-link.active,
+    .nav-item.show .nav-link {
+        text-decoration: none;
+    }
+}
+
+typo3-backend-tab-scroller {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+}
+
+.nav-tabs-scroll {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    padding: 0;
+    border: 0;
+    color: var(--typo3-nav-link-color);
+    background-color: var(--typo3-nav-link-bg);
+    cursor: pointer;
+    transition: opacity .15s ease-in-out;
+    border-bottom: var(--typo3-nav-border-width) solid var(--typo3-nav-border-color);
+
+    &:hover {
+        color: var(--typo3-nav-link-hover-color);
+        background-color: var(--typo3-nav-link-hover-bg);
+    }
+}
+
+.nav-tabs-scroll-start {
+    inset-inline-start: 0;
+    border-start-start-radius: var(--typo3-nav-link-border-radius);
+    border-inline-end: 1px solid var(--typo3-nav-border-color);
+}
+
+.nav-tabs-scroll-end {
+    inset-inline-end: 0;
+    border-start-end-radius: var(--typo3-nav-link-border-radius);
+    border-inline-start: 1px solid var(--typo3-nav-border-color);
+}
+
+typo3-backend-tab-scroller > .nav-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-padding-inline: 2rem;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+//
+// Tabs
+//
 .tab-content {
+    margin-top: calc(var(--typo3-spacing) / 2);
+
     > .tab-pane {
         display: none;
     }
@@ -180,20 +249,5 @@
 
     > .form-section {
         --typo3-form-section-radius-top: 0;
-    }
-}
-
-.tab-pane {
-    > .panel {
-        --typo3-panel-border-radius-top: 0;
-    }
-
-    > .form-section {
-        --typo3-form-section-radius-top: 0;
-    }
-
-    > .visually-hidden:first-child + .form-section,
-    > *:first-child {
-        border-top: none;
     }
 }

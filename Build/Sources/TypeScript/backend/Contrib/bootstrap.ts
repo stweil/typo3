@@ -32,6 +32,8 @@ import '@typo3/backend/dropdown';
 //export { default as Offcanvas } from 'bootstrap/js/src/offcanvas.js';
 export { default as Popover } from 'bootstrap/js/src/popover.js';
 //export { default as ScrollSpy } from 'bootstrap/js/src/scrollspy.js';
-export { default as Tab } from 'bootstrap/js/src/tab.js';
+// Tab is handled by @typo3/backend/tab which includes native tab switching
+// and legacy Bootstrap tab compatibility
+import '@typo3/backend/tab';
 //export { default as Toast } from 'bootstrap/js/src/toast.js';
 //export { default as Tooltip } from 'bootstrap/js/src/tooltip.js';

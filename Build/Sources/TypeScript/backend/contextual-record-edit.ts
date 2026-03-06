@@ -15,7 +15,6 @@ import FormEngine from '@typo3/backend/form-engine';
 import Modal from '@typo3/backend/modal';
 import Severity from '@typo3/backend/severity';
 import DocumentService from '@typo3/core/document-service';
-import { Tab } from 'bootstrap';
 import '@typo3/backend/element/icon-element';
 import labels from '~labels/backend.alt_doc';
 
@@ -54,7 +53,6 @@ class ContextualRecordEdit {
     this.initializeEscapeKey();
     this.initializeParentMessages();
     this.handlePostSaveState();
-    this.initTabOverflow();
     if (!this.options.justSaved) {
       this.focusFirstElement();
     }
@@ -209,106 +207,6 @@ class ContextualRecordEdit {
     );
   }
 
-  /**
-   * Collapses overflowing nav-tabs into a dropdown menu.
-   * Only active inside .contextual-record-edit where tabs use flex-wrap: nowrap.
-   */
-  private initTabOverflow(): void {
-    const navTabs = document.querySelector('.contextual-record-edit .nav-tabs') as HTMLElement | null;
-    if (!navTabs) {
-      return;
-    }
-
-    const allItems = Array.from(navTabs.querySelectorAll<HTMLLIElement>(':scope > .nav-item'));
-    if (allItems.length <= 1) {
-      return;
-    }
-
-    const moreItem = document.createElement('li');
-    moreItem.className = 'nav-item dropdown nav-tabs-overflow';
-    moreItem.hidden = true;
-    moreItem.innerHTML =
-      '<button type="button" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">'
-      + '<span class="nav-tabs-overflow-label"></span>'
-      + '<typo3-backend-icon identifier="actions-menu-alternative" size="small"></typo3-backend-icon>'
-      + '</button>'
-      + '<ul class="dropdown-menu dropdown-menu-end"></ul>';
-    navTabs.appendChild(moreItem);
-
-    const dropdownMenu = moreItem.querySelector('.dropdown-menu') as HTMLUListElement;
-    const overflowLabel = moreItem.querySelector('.nav-tabs-overflow-label') as HTMLSpanElement;
-
-    function update(): void {
-      for (const item of allItems) {
-        item.hidden = false;
-      }
-      moreItem.hidden = true;
-      dropdownMenu.innerHTML = '';
-
-      if (navTabs.scrollWidth <= navTabs.clientWidth) {
-        return;
-      }
-
-      moreItem.hidden = false;
-      const moreWidth = moreItem.getBoundingClientRect().width;
-      const containerLeft = navTabs.getBoundingClientRect().left;
-      const availableWidth = navTabs.clientWidth - moreWidth;
-
-      let cutoff = allItems.length;
-      for (let i = 0; i < allItems.length; i++) {
-        const rect = allItems[i].getBoundingClientRect();
-        if ((rect.right - containerLeft) > availableWidth) {
-          cutoff = i;
-          break;
-        }
-      }
-
-      if (cutoff >= allItems.length) {
-        moreItem.hidden = true;
-        return;
-      }
-
-      let activeOverflowLabel = '';
-      for (let i = cutoff; i < allItems.length; i++) {
-        const item = allItems[i];
-        item.hidden = true;
-
-        const tabLink = item.querySelector('.nav-link') as HTMLElement;
-        const li = document.createElement('li');
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'dropdown-item';
-
-        if (tabLink.classList.contains('active')) {
-          button.classList.add('active');
-          activeOverflowLabel = tabLink.textContent?.trim() ?? '';
-        }
-        if (item.classList.contains('has-validation-error')) {
-          button.classList.add('dropdown-item-danger');
-        }
-
-        button.textContent = tabLink.textContent?.trim() ?? '';
-        button.addEventListener('click', (): void => {
-          Tab.getOrCreateInstance(tabLink).show();
-          requestAnimationFrame(update);
-        });
-
-        li.appendChild(button);
-        dropdownMenu.appendChild(li);
-      }
-      overflowLabel.textContent = activeOverflowLabel;
-    }
-
-    navTabs.addEventListener('shown.bs.tab', (): void => {
-      requestAnimationFrame(update);
-    });
-
-    new ResizeObserver((): void => {
-      update();
-    }).observe(navTabs);
-
-    update();
-  }
 }
 
 export default ContextualRecordEdit;

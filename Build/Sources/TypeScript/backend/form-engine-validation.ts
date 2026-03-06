@@ -495,7 +495,7 @@ export default class FormEngineValidation {
    */
   public static validate(section?: Element): void {
     if (typeof section === 'undefined' || section instanceof Document) {
-      formEngineInstance.formElement.querySelectorAll(FormEngineValidation.markerSelector + ', .t3js-tabmenu-item').forEach((tabMenuItem: HTMLElement): void => {
+      formEngineInstance.formElement.querySelectorAll(FormEngineValidation.markerSelector + ', [role="tablist"] > .nav-item').forEach((tabMenuItem: HTMLElement): void => {
         tabMenuItem.classList.remove(FormEngineValidation.validationErrorClass);
       });
     }
@@ -572,8 +572,8 @@ export default class FormEngineValidation {
 
       const id = pane.id;
       formEngineInstance.formElement
-        .querySelector('[data-bs-target="#' + id + '"]')
-        .closest('.t3js-tabmenu-item')
+        .querySelector(selector`[data-typo3-tab="${'#' + id}"]`)
+        .closest('.nav-item')
         .classList.toggle(FormEngineValidation.validationErrorClass, !isValid);
     });
   }

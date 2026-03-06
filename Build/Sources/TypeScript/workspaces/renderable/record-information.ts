@@ -90,8 +90,7 @@ export class RecordInformationElement extends LitElement {
         <button
           type="button"
           class="nav-link"
-          data-bs-toggle="tab"
-          data-bs-target="${target}"
+          data-typo3-tab="${target}"
           aria-controls="${target}"
           role="tab"
         >

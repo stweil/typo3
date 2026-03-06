@@ -16,7 +16,8 @@ import DocumentService from '@typo3/core/document-service';
 import { selector } from '@typo3/core/literals';
 import '@typo3/backend/element/icon-element';
 import Popover from './popover';
-import { type Popover as BootstrapPopover, Tab as BootstrapTab } from 'bootstrap';
+import { type Popover as BootstrapPopover } from 'bootstrap';
+import { Tab } from '@typo3/backend/tab';
 import type { PostValidationEvent } from '@typo3/backend/form-engine-validation';
 import DomHelper from '@typo3/backend/utility/dom-helper';
 import backendAltDocLabels from '~labels/backend.alt_doc';
@@ -142,7 +143,7 @@ export class FormEngineReview {
     while (ref) {
       if (ref.matches('[id][role="tabpanel"]')) {
         const tabContainer = document.querySelector(selector`[aria-controls="${ref.id}"]`);
-        new BootstrapTab(tabContainer).show();
+        Tab.show(tabContainer as HTMLElement);
       }
       ref = ref.parentElement;
     }

@@ -6,9 +6,6 @@
 .contextual-record-edit {
     --contextual-record-edit-bg: var(--typo3-surface-base);
     --contextual-record-edit-border-color: color-mix(in srgb, var(--contextual-record-edit-bg), var(--typo3-text-color-base) 15%);
-    --contextual-record-edit-active-color: var(--typo3-state-primary-bg);
-    --contextual-record-edit-danger-color: var(--typo3-state-danger-color);
-    --contextual-record-edit-danger-bg: var(--typo3-state-danger-bg);
     --contextual-record-edit-success-color: var(--typo3-state-success-color);
     --contextual-record-edit-success-bg: var(--typo3-state-success-bg);
 
@@ -16,82 +13,6 @@
     h1,
     .typo3-TCEforms > .text-end {
         display: none;
-    }
-
-    //
-    // Modernized tabs UI
-    //
-    .nav-tabs {
-        --typo3-nav-tabs-bg: transparent;
-        --typo3-nav-tabs-border-width: 0;
-        flex-wrap: nowrap;
-        border-bottom: 2px solid var(--contextual-record-edit-border-color);
-        gap: 0;
-
-        .nav-link {
-            border: 0;
-            border-radius: 0;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -2px;
-            background: transparent;
-            padding: .5rem 1rem;
-            white-space: nowrap;
-
-            &:hover {
-                background: transparent;
-                border-bottom-color: var(--contextual-record-edit-border-color);
-            }
-        }
-
-        .nav-link.active,
-        .nav-item.show .nav-link {
-            &,
-            &:hover {
-                background: transparent;
-                border-bottom-color: var(--contextual-record-edit-active-color);
-                color: var(--contextual-record-edit-active-color);
-            }
-        }
-    }
-
-    //
-    // Tab overflow dropdown (shown when tabs don't fit in one line)
-    //
-    .nav-tabs-overflow {
-        margin-inline-start: auto;
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: .375rem;
-            padding: .5rem;
-
-            &.dropdown-toggle:after {
-                display: none;
-            }
-
-            &:has(.nav-tabs-overflow-label:not(:empty)) {
-                border-bottom-color: var(--contextual-record-edit-active-color);
-                color: var(--contextual-record-edit-active-color);
-            }
-        }
-
-        .nav-tabs-overflow-label:not(:empty) {
-            font-size: .75rem;
-            max-width: 10ch;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .dropdown-item.active {
-            font-weight: bold;
-        }
-
-        .dropdown-item-danger {
-            color: var(--contextual-record-edit-danger-color);
-            background-color: var(--contextual-record-edit-danger-bg);
-        }
     }
 
     //
