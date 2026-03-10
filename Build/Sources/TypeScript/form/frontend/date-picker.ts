@@ -17,6 +17,8 @@
  * Note: Requires jQuery UI to be included on the page.
  *
  * Scope: frontend
+ *
+ * @deprecated since v14, will be removed in v15. Use the "Date" form element with native HTML5 date input instead.
  */
 interface JQuery { // eslint-disable-line @typescript-eslint/no-unused-vars
   datepicker(optionsOrInstruction: object | string, value?: string): JQuery;
