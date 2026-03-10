@@ -12,7 +12,7 @@
  */
 
 import { html, LitElement, type TemplateResult, nothing } from 'lit';
-import { customElement, property, query } from 'lit/decorators.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 import { until } from 'lit/directives/until.js';
 import AjaxRequest from '@typo3/core/ajax/ajax-request';
 import Persistent from '@typo3/backend/storage/persistent';
@@ -481,6 +481,35 @@ class PageTreeToolbar extends TreeToolbar {
   @property({ type: Boolean })
   searchByFrontendUri: boolean = false;
 
+  @state()
+  private subMenuItemsExpanded: boolean = false;
+
+  @state()
+  private hasHiddenSubMenuItems: boolean;
+
+  @query('.tree-toolbar__submenu-items')
+  private readonly submenuItemsContainer: HTMLElement | null;
+
+  private resizeObserver!: ResizeObserver;
+
+  private readonly handleResize = this.checkHiddenSubmenuItems.bind(this);
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.resizeObserver.disconnect();
+    window.removeEventListener('resize', this.handleResize);
+  }
+
+  protected override firstUpdated() {
+    super.firstUpdated();
+
+    this.resizeObserver = new ResizeObserver(() => this.checkHiddenSubmenuItems());
+    this.resizeObserver.observe(this.submenuItemsContainer);
+
+    window.addEventListener('resize', this.handleResize);
+    this.checkHiddenSubmenuItems();
+  }
+
   protected override updated(changedProperties: Map<PropertyKey, unknown>): void {
     super.updated(changedProperties);
 
@@ -492,11 +521,11 @@ class PageTreeToolbar extends TreeToolbar {
       if (this.tree?.settings?.searchByFrontendUriEnabled !== undefined) {
         this.searchByFrontendUri = this.tree.settings.searchByFrontendUriEnabled;
       }
+      this.checkHiddenSubmenuItems();
     }
   }
 
   protected override render(): TemplateResult {
-    /* eslint-disable @stylistic/indent */
     return html`
       <div class="tree-toolbar">
         <div class="tree-toolbar__menu">
@@ -551,26 +580,49 @@ class PageTreeToolbar extends TreeToolbar {
           >
           </typo3-backend-content-navigation-toggle>
         </div>
-        <div class="tree-toolbar__submenu">
-          ${this.tree?.settings?.doktypes?.length
-        ? this.tree.settings.doktypes.map((item: any) => {
-          return html`
-                <div
-                  class="tree-toolbar__menuitem tree-toolbar__drag-node"
-                  title="${item.title}"
-                  draggable="true"
-                  data-tree-icon="${item.icon}"
-                  data-node-type="${item.nodeType}"
-                  aria-hidden="true"
-                  @dragstart="${(event: DragEvent) => { this.handleDragStart(event, item); }}"
-                >
-                  <typo3-backend-icon identifier="${item.icon}" size="small"></typo3-backend-icon>
-                </div>
-              `;
-        })
-        : ''
-      }
+        ${this.renderToolbarSubmenu()}
+      </div>
+    `;
+  }
+
+  protected renderToolbarSubmenu(): TemplateResult | typeof nothing {
+    let doktypesHtml: TemplateResult | typeof nothing;
+    if (!this.tree?.settings?.doktypes?.length) {
+      doktypesHtml = nothing;
+    } else {
+      doktypesHtml = this.tree.settings.doktypes.map((item: any) => {
+        return html `<div
+          class="tree-toolbar__menuitem tree-toolbar__drag-node"
+          title="${item.title}"
+          draggable="true"
+          data-tree-icon="${item.icon}"
+          data-node-type="${item.nodeType}"
+          aria-hidden="true"
+          @dragstart="${(event: DragEvent) => this.handleDragStart(event, item)}"
+        >
+          <typo3-backend-icon identifier="${item.icon}" size="small"></typo3-backend-icon>
         </div>
+        `;
+      });
+    }
+
+    return html`
+      <div class="tree-toolbar__submenu">
+        <div
+          class="tree-toolbar__submenu-items ${this.subMenuItemsExpanded ? 'tree-toolbar__submenu-items--expanded' : ''}">
+          ${doktypesHtml}
+        </div>
+        ${this.hasHiddenSubMenuItems ? html`
+          <button
+            class="btn btn-sm btn-icon btn-default btn-borderless tree-toolbar__submenu-toggle"
+            aria-hidden="true"
+            tabindex="-1"
+            @click=${this.toggleSubmenu}
+          >
+            <typo3-backend-icon
+              identifier=${this.subMenuItemsExpanded ? 'actions-chevron-up' : 'actions-chevron-down'}
+              size="small"></typo3-backend-icon>
+          </button>` : nothing}
       </div>
     `;
   }
@@ -707,6 +759,24 @@ class PageTreeToolbar extends TreeToolbar {
     event.dataTransfer.setData(DataTransferTypes.dragTooltip, JSON.stringify(metadata));
     event.dataTransfer.setData(DataTransferTypes.newTreenode, JSON.stringify(newNode));
     event.dataTransfer.effectAllowed = 'move';
+  }
+
+  private checkHiddenSubmenuItems(): void {
+    requestAnimationFrame(() => {
+      const wasExpanded = this.subMenuItemsExpanded;
+      if (wasExpanded) {
+        this.submenuItemsContainer.classList.remove('tree-toolbar__submenu-items--expanded');
+      }
+      this.hasHiddenSubMenuItems = this.submenuItemsContainer.scrollHeight > this.submenuItemsContainer.clientHeight;
+      if (wasExpanded) {
+        this.submenuItemsContainer.classList.add('tree-toolbar__submenu-items--expanded');
+      }
+    });
+  }
+
+  private toggleSubmenu(e: Event): void {
+    e.stopPropagation();
+    this.subMenuItemsExpanded = !this.subMenuItemsExpanded;
   }
 }
 
