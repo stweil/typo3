@@ -14,7 +14,6 @@
 /**
  * Module: @typo3/form/backend/form-manager/view-model
  */
-import $ from 'jquery';
 import Modal, { type ModalElement } from '@typo3/backend/modal';
 import Severity from '@typo3/backend/severity';
 import Icons from '@typo3/backend/icons';
@@ -40,7 +39,8 @@ enum Identifiers {
 }
 
 function newFormSetup(formManagerApp: FormManager): void {
-  $(Identifiers.newFormModalTrigger).on('click', async function() {
+  const newFormModalTrigger: HTMLElement = document.querySelector<HTMLElement>(Identifiers.newFormModalTrigger);
+  newFormModalTrigger.addEventListener('click', async (): Promise<void> => {
     await topLevelModuleImport('@typo3/form/backend/form-wizard/form-wizard.js');
     const content = html`<typo3-backend-form-wizard .formManager="${formManagerApp}"
     ></typo3-backend-form-wizard>`;
@@ -57,88 +57,11 @@ function newFormSetup(formManagerApp: FormManager): void {
 }
 
 function removeFormSetup(formManagerApp: FormManager): void {
-  $(Identifiers.removeFormModalTrigger).on('click', function(e: Event) {
-    const modalButtons = [];
-
-    e.preventDefault();
-    const that = e.currentTarget as HTMLElement;
-
-    modalButtons.push({
-      text: formManagerLabels.get('formManager.cancel'),
-      active: true,
-      btnClass: 'btn-default',
-      name: 'cancel',
-      trigger: function(e: Event, modal: ModalElement) {
-        modal.hideModal();
-      }
-    });
-
-    modalButtons.push({
-      text: formManagerLabels.get('formManager.remove_form'),
-      active: true,
-      btnClass: 'btn-danger',
-      name: 'createform',
-      trigger: function(e: Event, modal: ModalElement) {
-        new AjaxRequest(formManagerApp.getAjaxEndpoint('delete')).post({
-          formPersistenceIdentifier: that.dataset.formPersistenceIdentifier,
-        }).then(async (response: AjaxResponse): Promise<void> => {
-          const data = await response.resolve();
-          if (data.status === 'success') {
-            document.location = data.url;
-          } else {
-            Notification.error(data.title, data.message);
-          }
-          modal.hideModal();
-        });
-      }
-    });
-
-    Modal.show(
-      formManagerLabels.get('formManager.remove_form_title'),
-      formManagerLabels.get('formManager.remove_form_message', { '0': that.dataset.formName }),
-      Severity.error ,
-      modalButtons
-    );
-  });
-}
-
-function duplicateFormSetup(formManagerApp: FormManager): void {
-  $(Identifiers.duplicateFormModalTrigger).on('click', async function(e: Event) {
-    e.preventDefault();
-    const formElement = e.currentTarget as HTMLElement;
-    await topLevelModuleImport('@typo3/form/backend/form-wizard/form-wizard.js');
-    const duplicateForm = {
-      name: formElement.dataset.formName,
-      persistenceIdentifier: formElement.dataset.formPersistenceIdentifier
-    };
-
-    const content = html`
-        <typo3-backend-form-wizard
-          .formManager="${formManagerApp}"
-          .duplicateForm="${duplicateForm}"
-        ></typo3-backend-form-wizard>
-    `;
-    Modal.advanced({
-      title: formManagerLabels.get('formManager.duplicateFormWizard.step1.title', { '0': formElement.dataset.formName }),
-      content: content,
-      severity: SeverityEnum.notice,
-      size: Modal.sizes.medium,
-      staticBackdrop: true,
-      buttons: []
-    });
-  });
-}
-
-function showReferencesSetup(formManagerApp: FormManager): void {
-  $(Identifiers.showReferences).on('click', (e: Event): void => {
-    e.preventDefault();
-    const currentTarget = e.currentTarget as HTMLElement;
-    const url = formManagerApp.getAjaxEndpoint('references') + '&formPersistenceIdentifier=' + currentTarget.dataset.formPersistenceIdentifier;
-
-    new AjaxRequest(url).get().then(async (response: AjaxResponse): Promise<void> => {
-      const data = await response.resolve();
-      let html;
+  document.querySelectorAll<HTMLElement>(Identifiers.removeFormModalTrigger).forEach((element: HTMLElement): void => {
+    element.addEventListener('click', async (e: Event): Promise<void> => {
       const modalButtons = [];
+
+      e.preventDefault();
 
       modalButtons.push({
         text: formManagerLabels.get('formManager.cancel'),
@@ -150,67 +73,152 @@ function showReferencesSetup(formManagerApp: FormManager): void {
         }
       });
 
-      const referencesLength = data.references.length;
-      const editIconMarkup = await Icons.getIcon('actions-open', Icons.sizes.small);
-
-      if (referencesLength > 0) {
-        html = '<h2 class="h3">' + formManagerLabels.get('formManager.references.headline') + '</h2>'
-          + '<div class="table-fit">'
-          + '<table id="forms" class="table table-striped table-hover">'
-          + '<thead>'
-          + '<tr>'
-          + '<th class="col-icon"></th>'
-          + '<th class="col-recordtitle">' + formManagerLabels.get('formManager.table.field.title') + '</th>'
-          + '<th>' + formManagerLabels.get('formManager.table.field.uid') + '</th>'
-          + '<th class="col-control nowrap"><span class="visually-hidden">' + formManagerLabels.get('formManager.table.field.control') + '</span></th>'
-          + '</tr>'
-          + '</thead>'
-          + '<tbody>';
-
-        for (let i = 0, len = data.references.length; i < len; ++i) {
-          html += '<tr>'
-            + '<td class="col-icon">' + data.references[i].recordIcon + '</td>'
-            + '<td class="col-recordtitle">'
-            + '<a href="' + securityUtility.encodeHtml(data.references[i].recordEditUrl) + '" data-identifier="referenceLink">' + securityUtility.encodeHtml(data.references[i].recordTitle) + '</a>'
-            + '</td>'
-            + '<td>' + securityUtility.encodeHtml(data.references[i].recordUid) + '</td>'
-            + '<td class="col-control">'
-            + '<div class="btn-group" role="group">'
-            + '<a href="' + securityUtility.encodeHtml(data.references[i].recordEditUrl) + '" data-identifier="referenceLink" class="btn btn-default" title="' + formManagerLabels.get('formManager.btn.edit.title') + '">'
-            + editIconMarkup
-            + '</a>'
-            + '</div>'
-            + '</td>'
-            + '</tr>';
+      modalButtons.push({
+        text: formManagerLabels.get('formManager.remove_form'),
+        active: true,
+        btnClass: 'btn-danger',
+        name: 'createform',
+        trigger: function(e: Event, modal: ModalElement) {
+          new AjaxRequest(formManagerApp.getAjaxEndpoint('delete')).post({
+            formPersistenceIdentifier: element.dataset.formPersistenceIdentifier,
+          }).then(async (response: AjaxResponse): Promise<void> => {
+            const data = await response.resolve();
+            if (data.status === 'success') {
+              document.location = data.url;
+            } else {
+              Notification.error(data.title, data.message);
+            }
+            modal.hideModal();
+          });
         }
-
-        html += '</tbody>'
-          + '</table>'
-          + '</div>';
-      } else {
-        html = '<div>'
-          + '<h1>' + formManagerLabels.get('formManager.references.title', { '0': securityUtility.encodeHtml(data.formPersistenceIdentifier) }) + '</h1>'
-          + '</div>'
-          + '<div>' + formManagerLabels.get('formManager.no_references') + '</div>';
-      }
-
-      html = $(html);
-      $(Identifiers.referenceLink, html).on('click', function(e) {
-        e.preventDefault();
-        Modal.currentModal.hideModal();
-        document.location = $(e.currentTarget).prop('href');
       });
 
       Modal.show(
-        formManagerLabels.get('formManager.references.title', { '0': currentTarget.dataset.formName }),
-        html,
-        Severity.notice,
+        formManagerLabels.get('formManager.remove_form_title'),
+        formManagerLabels.get('formManager.remove_form_message', { '0': element.dataset.formName }),
+        Severity.error ,
         modalButtons
       );
-    }).catch((error: unknown): void => {
-      if (error instanceof AjaxResponse) {
-        Notification.error(error.response.statusText, String(error.response.status), 2);
-      }
+    });
+  });
+}
+
+function duplicateFormSetup(formManagerApp: FormManager): void {
+  document.querySelectorAll<HTMLElement>(Identifiers.duplicateFormModalTrigger).forEach((element: HTMLElement): void => {
+    element.addEventListener('click', async (e: Event): Promise<void> => {
+      e.preventDefault();
+      await topLevelModuleImport('@typo3/form/backend/form-wizard/form-wizard.js');
+      const duplicateForm = {
+        name: element.dataset.formName,
+        persistenceIdentifier: element.dataset.formPersistenceIdentifier
+      };
+
+      const content = html`
+          <typo3-backend-form-wizard
+            .formManager="${formManagerApp}"
+            .duplicateForm="${duplicateForm}"
+          ></typo3-backend-form-wizard>
+      `;
+      Modal.advanced({
+        title: formManagerLabels.get('formManager.duplicateFormWizard.step1.title', { '0': element.dataset.formName }),
+        content: content,
+        severity: SeverityEnum.notice,
+        size: Modal.sizes.medium,
+        staticBackdrop: true,
+        buttons: []
+      });
+    });
+  });
+}
+
+function showReferencesSetup(formManagerApp: FormManager): void {
+  document.querySelectorAll<HTMLElement>(Identifiers.showReferences).forEach((element: HTMLElement): void => {
+    element.addEventListener('click', (e: Event): void => {
+      e.preventDefault();
+      const url = formManagerApp.getAjaxEndpoint('references') + '&formPersistenceIdentifier=' + element.dataset.formPersistenceIdentifier;
+
+      new AjaxRequest(url).get().then(async (response: AjaxResponse): Promise<void> => {
+        const data = await response.resolve();
+        let htmlString: string;
+        const modalButtons = [];
+
+        modalButtons.push({
+          text: formManagerLabels.get('formManager.cancel'),
+          active: true,
+          btnClass: 'btn-default',
+          name: 'cancel',
+          trigger: function(e: Event, modal: ModalElement) {
+            modal.hideModal();
+          }
+        });
+
+        const referencesLength = data.references.length;
+        const editIconMarkup = await Icons.getIcon('actions-open', Icons.sizes.small);
+
+        if (referencesLength > 0) {
+          htmlString = '<h2 class="h3">' + formManagerLabels.get('formManager.references.headline') + '</h2>'
+            + '<div class="table-fit">'
+            + '<table id="forms" class="table table-striped table-hover">'
+            + '<thead>'
+            + '<tr>'
+            + '<th class="col-icon"></th>'
+            + '<th class="col-recordtitle">' + formManagerLabels.get('formManager.table.field.title') + '</th>'
+            + '<th>' + formManagerLabels.get('formManager.table.field.uid') + '</th>'
+            + '<th class="col-control nowrap"><span class="visually-hidden">' + formManagerLabels.get('formManager.table.field.control') + '</span></th>'
+            + '</tr>'
+            + '</thead>'
+            + '<tbody>';
+
+          for (let i = 0, len = data.references.length; i < len; ++i) {
+            htmlString += '<tr>'
+              + '<td class="col-icon">' + data.references[i].recordIcon + '</td>'
+              + '<td class="col-recordtitle">'
+              + '<a href="' + securityUtility.encodeHtml(data.references[i].recordEditUrl) + '" data-identifier="referenceLink">' + securityUtility.encodeHtml(data.references[i].recordTitle) + '</a>'
+              + '</td>'
+              + '<td>' + securityUtility.encodeHtml(data.references[i].recordUid) + '</td>'
+              + '<td class="col-control">'
+              + '<div class="btn-group" role="group">'
+              + '<a href="' + securityUtility.encodeHtml(data.references[i].recordEditUrl) + '" data-identifier="referenceLink" class="btn btn-default" title="' + formManagerLabels.get('formManager.btn.edit.title') + '">'
+              + editIconMarkup
+              + '</a>'
+              + '</div>'
+              + '</td>'
+              + '</tr>';
+          }
+
+          htmlString += '</tbody>'
+            + '</table>'
+            + '</div>';
+        } else {
+          htmlString = '<div>'
+            + '<h1>' + formManagerLabels.get('formManager.references.title', { '0': securityUtility.encodeHtml(data.formPersistenceIdentifier) }) + '</h1>'
+            + '</div>'
+            + '<div>' + formManagerLabels.get('formManager.no_references') + '</div>';
+        }
+
+        const template = document.createElement('template');
+        template.innerHTML = htmlString;
+        const fragment = template.content;
+
+        fragment.querySelectorAll<HTMLAnchorElement>(Identifiers.referenceLink).forEach((link: HTMLAnchorElement): void => {
+          link.addEventListener('click', (e: Event): void => {
+            e.preventDefault();
+            Modal.currentModal.hideModal();
+            document.location = (e.currentTarget as HTMLAnchorElement).href;
+          });
+        });
+
+        Modal.show(
+          formManagerLabels.get('formManager.references.title', { '0': element.dataset.formName }),
+          fragment,
+          Severity.notice,
+          modalButtons
+        );
+      }).catch((error: unknown): void => {
+        if (error instanceof AjaxResponse) {
+          Notification.error(error.response.statusText, String(error.response.status), 2);
+        }
+      });
     });
   });
 }
