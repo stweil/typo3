@@ -89,8 +89,16 @@ interface UniqueDefinitionUsed {
   uid: string | number;
 }
 
+interface InlineEndpoints {
+  create: string;
+  details: string;
+  synchronizelocalize: string;
+  expandcollapse: string;
+}
+
 class InlineControlContainer extends HTMLElement {
   private ajaxDispatcher: AjaxDispatcher = null;
+  private recordsContainer: HTMLDivElement = null;
   private requestQueue: RequestQueue = {};
   private progressQueue: ProgressQueue = {};
   private readonly noTitleString: string = (coreCoreLabels.get('labels.no_title'));
@@ -117,6 +125,15 @@ class InlineControlContainer extends HTMLElement {
 
   public get max(): number {
     return parseInt(this.dataset.max, 10) || 0;
+  }
+
+  private get endpoints(): InlineEndpoints {
+    return {
+      create: 'record_inline_create',
+      details: 'record_inline_details',
+      synchronizelocalize: 'record_inline_synchronizelocalize',
+      expandcollapse: 'record_inline_expandcollapse',
+    };
   }
 
   private static getValuesFromHashMap(hashmap: UniqueDefinitionCollection): Array<any> {
@@ -171,6 +188,7 @@ class InlineControlContainer extends HTMLElement {
 
   public connectedCallback(): void {
     this.ajaxDispatcher = new AjaxDispatcher(this.objectGroup);
+    this.recordsContainer = <HTMLDivElement>this.querySelector(selector`[id="${this.id}_records"]`);
     this.registerEvents();
   }
 
@@ -244,7 +262,7 @@ class InlineControlContainer extends HTMLElement {
     new RegularEvent('message', this.handlePostMessage).bindTo(window);
 
     if (this.sortable) {
-      const recordListContainer = <HTMLDivElement>this.querySelector(selector`[id="${this.id}_records"]`);
+      const recordListContainer = this.recordsContainer;
       new Sortable(recordListContainer, {
         group: recordListContainer.getAttribute('id'),
         handle: '.sortableHandle',
@@ -368,7 +386,7 @@ class InlineControlContainer extends HTMLElement {
       this.getRecordContainer(objectId).insertAdjacentHTML('afterend', markup);
       this.memorizeAddRecord(uid, afterUid, selectedValue);
     } else {
-      this.querySelector(selector`[id="${this.id}_records"]`).insertAdjacentHTML('beforeend', markup);
+      this.recordsContainer.insertAdjacentHTML('beforeend', markup);
       this.memorizeAddRecord(uid, null, selectedValue);
     }
   }
@@ -379,7 +397,7 @@ class InlineControlContainer extends HTMLElement {
    */
   private async importRecord(params: Array<any>, afterUid?: string): Promise<void> {
     return this.ajaxDispatcher.send(
-      this.ajaxDispatcher.newRequest(this.ajaxDispatcher.getEndpoint('record_inline_create')),
+      this.ajaxDispatcher.newRequest(this.ajaxDispatcher.getEndpoint(this.endpoints.create)),
       params,
     ).then(async (response: InlineResponseInterface): Promise<void> => {
       if (this.isBelowMax()) {
@@ -477,10 +495,10 @@ class InlineControlContainer extends HTMLElement {
       e.stopImmediatePropagation();
 
       this.ajaxDispatcher.send(
-        this.ajaxDispatcher.newRequest(this.ajaxDispatcher.getEndpoint('record_inline_synchronizelocalize')),
+        this.ajaxDispatcher.newRequest(this.ajaxDispatcher.getEndpoint(this.endpoints.synchronizelocalize)),
         [this.objectGroup, targetElement.dataset.type],
       ).then(async (response: InlineResponseInterface): Promise<void> => {
-        this.querySelector(selector`[id="${this.id}_records"]`).insertAdjacentHTML('beforeend', response.data);
+        this.recordsContainer.insertAdjacentHTML('beforeend', response.data);
 
         const objectIdPrefix = this.objectGroup + Separators.structureSeparator;
         for (const itemUid of response.compilerInput.delete) {
@@ -541,7 +559,7 @@ class InlineControlContainer extends HTMLElement {
       const progress = this.getProgress(objectId);
 
       if (!isLoading) {
-        const ajaxRequest = this.ajaxDispatcher.newRequest(this.ajaxDispatcher.getEndpoint('record_inline_details'));
+        const ajaxRequest = this.ajaxDispatcher.newRequest(this.ajaxDispatcher.getEndpoint(this.endpoints.details));
         const request = this.ajaxDispatcher.send(ajaxRequest, [objectId]);
 
         request.then(async (response: InlineResponseInterface): Promise<void> => {
@@ -608,7 +626,7 @@ class InlineControlContainer extends HTMLElement {
     }
 
     this.ajaxDispatcher.send(
-      this.ajaxDispatcher.newRequest(this.ajaxDispatcher.getEndpoint('record_inline_expandcollapse')),
+      this.ajaxDispatcher.newRequest(this.ajaxDispatcher.getEndpoint(this.endpoints.expandcollapse)),
       [objectId, expand.join(','), collapse.join(',')]
     );
   }
@@ -688,7 +706,7 @@ class InlineControlContainer extends HTMLElement {
   private changeSortingByButton(objectId: string, direction: SortDirections): void {
     const currentRecordContainer = this.getRecordContainer(objectId);
     const recordUid = currentRecordContainer.dataset.objectUid;
-    const recordListContainer = <HTMLDivElement>this.querySelector(selector`[id="${this.id}_records"]`);
+    const recordListContainer = this.recordsContainer;
     const records = Array.from(recordListContainer.children).map((child: HTMLElement) => child.dataset.objectUid);
     const position = records.indexOf(recordUid);
     let isChanged = false;
@@ -721,7 +739,7 @@ class InlineControlContainer extends HTMLElement {
       return;
     }
 
-    const recordListContainer = <HTMLDivElement>this.querySelector(selector`[id="${this.id}_records"]`);
+    const recordListContainer = this.recordsContainer;
     const records = Array.from(recordListContainer.querySelectorAll(selector`[data-object-parent-group="${this.objectGroup}"][data-placeholder-record="0"]`))
       .map((child: HTMLElement) => child.dataset.objectUid);
 
