@@ -13,7 +13,7 @@ test('Delete page and check recycler', async ({ page, backend }) => {
     await backend.contentFrame.getByRole('button', { name: 'Page (inside)' }).click();
     await backend.contentFrame.getByRole('link', { name: 'Standard' }).click();
 
-    await expect(backend.contentFrame.locator('h1')).toContainText('Create new Page');
+    await expect(backend.contentFrame.locator('h1')).toContainText('Create new Standard Page');
     await backend.contentFrame.getByText('[title]').fill(newPageTitle);
     await backend.formEngine.save();
     await backend.formEngine.close();
@@ -28,7 +28,7 @@ test('Delete page and check recycler', async ({ page, backend }) => {
       await formEngineLoaded;
       await backend.contentFrame.getByRole('link', { name: 'Internal note' }).click();
 
-      await expect(backend.contentFrame.locator('h1')).toContainText(`Create new Internal note on page "${newPageTitle}"`);
+      await expect(backend.contentFrame.locator('h1')).toContainText('Create new Internal note');
       await backend.contentFrame.getByText('[subject]').fill(newSysNoteSubject);
       await backend.formEngine.save();
       await backend.formEngine.close();
@@ -96,7 +96,7 @@ test('Delete page and check recycler', async ({ page, backend }) => {
       await backend.gotoModule('records');
       await backend.pageTree.open('styleguide TCA demo', newPageTitle);
       await backend.contentFrame.locator(`a:has-text("${newSysNoteSubject}")`).click();
-      await expect(backend.contentFrame.locator('h1')).toContainText(`Edit Internal note "${newSysNoteSubject}" on page "${newPageTitle}"`);
+      await expect(backend.contentFrame.locator('h1')).toContainText(newSysNoteSubject);
       await backend.formEngine.close();
     });
   });

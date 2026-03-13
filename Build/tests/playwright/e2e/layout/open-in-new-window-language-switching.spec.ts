@@ -31,7 +31,7 @@ test('Switch between languages in "Open in new window"', async ({
 
       // Now the content frame has the full EditDocumentController
       await expect(
-        backend.contentFrame.getByRole('heading', { name: 'Edit Page' }),
+        backend.contentFrame.getByRole('heading', { name: 'staticdata' }),
       ).toBeVisible();
 
       const futureStandalonePage = page.context().waitForEvent('page');

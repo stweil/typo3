@@ -17,7 +17,7 @@ test('Create a new redirect', async ({ page, backend }) => {
   const formEngineReady = backend.formEngine.formEngineLoaded();
   await backend.contentFrame.getByRole('button', { name: 'Add redirect' }).click();
   await formEngineReady;
-  await expect(backend.contentFrame.locator('h1')).toContainText('Create new Redirect on root level');
+  await expect(backend.contentFrame.locator('h1')).toContainText('Create new Redirect');
 
   await backend.contentFrame.getByLabel('Source Path [source_path]').pressSequentially('/my-path/');
   await backend.contentFrame.getByLabel('Target [target]').pressSequentially('t3://page?uid=1');
@@ -33,7 +33,7 @@ test('Can edit a redirect by clicking on source path', async ({ backend }) => {
   const sourceHost = await backend.contentFrame.locator('td:nth-child(3)').first().innerText();
   const sourcePath = await backend.contentFrame.locator('.col-path > a').first().innerText();
   await backend.contentFrame.locator('.col-path > a').first().click();
-  await expect(backend.contentFrame.locator('h1')).toContainText('Edit Redirect "' + sourceHost + ', ' + sourcePath + '" on root level');
+  await expect(backend.contentFrame.locator('h1')).toContainText(sourceHost + ', ' + sourcePath);
   await backend.contentFrame.getByRole('button', { name: 'Close' }).click();
   await expect(backend.contentFrame.locator('h1')).toContainText('Redirect Management');
 });
@@ -43,14 +43,14 @@ test('Can edit a redirect by clicking the edit button', async ({ backend }) => {
   const sourceHost = await backend.contentFrame.locator('td:nth-child(3)').first().innerText();
   const sourcePath = await backend.contentFrame.locator('.col-path > a').first().innerText();
   await backend.contentFrame.locator('.col-control > div > a').first().click();
-  await expect(backend.contentFrame.locator('h1')).toContainText('Edit Redirect "' + sourceHost + ', ' + sourcePath + '" on root level');
+  await expect(backend.contentFrame.locator('h1')).toContainText(sourceHost + ', ' + sourcePath);
   await backend.contentFrame.getByRole('button', { name: 'Close' }).click();
   await expect(backend.contentFrame.locator('h1')).toContainText('Redirect Management');
 });
 
 test('See all possible status codes when creating new redirect', async ({ backend }) => {
   await backend.contentFrame.getByRole('button', { name: 'Add redirect' }).click();
-  await expect(backend.contentFrame.locator('h1')).toContainText('Create new Redirect on root level');
+  await expect(backend.contentFrame.locator('h1')).toContainText('Create new Redirect');
 
   const statusCodes = [301, 302, 303, 307, 308];
   for (const statusCode of statusCodes) {

@@ -9,12 +9,6 @@
     --contextual-record-edit-success-color: var(--typo3-state-success-color);
     --contextual-record-edit-success-bg: var(--typo3-state-success-bg);
 
-    // Hide the record title and record info footer
-    h1,
-    .typo3-TCEforms > .text-end {
-        display: none;
-    }
-
     //
     // Flat form sections — no card borders, no backgrounds, compact spacing
     //

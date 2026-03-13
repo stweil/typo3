@@ -32,7 +32,7 @@ test.describe('File Metadata', () => {
       await backend.formEngine.formEngineLoaded();
 
       // Verify the metadata editor heading
-      await expect(backend.contentFrame.locator('h1')).toContainText('Edit File Metadata "bus_lane.jpg"');
+      await expect(backend.contentFrame.locator('h1')).toContainText('bus_lane.jpg');
     });
   });
 });

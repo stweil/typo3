@@ -14,7 +14,7 @@ test('Shows site configuration module', async ({ backend }) => {
 
 test('Edit existing site configuration', async ({ backend, page }) => {
   await backend.contentFrame.getByTitle('Edit site configuration').first().click();
-  await expect(backend.contentFrame.locator('h1')).toContainText('Edit Site Configuration');
+  await expect(backend.contentFrame.locator('h1')).toContainText('styleguide-demo-51 · Site configuration');
 
   await test.step('Check languages tab', async () => {
     await backend.contentFrame.getByRole('tab', { name: 'Languages' }).click();

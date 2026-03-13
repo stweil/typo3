@@ -14,7 +14,7 @@ test('See QR Code management module', async ({ backend }) => {
 test('Create a new QR Code', async ({ page, backend }) => {
   const amountOfRedirects = await backend.contentFrame.locator('table > tbody > tr').count();
   await backend.contentFrame.getByRole('button', { name: 'Add QR Code' }).click();
-  await expect(backend.contentFrame.locator('h1')).toContainText('Create new QR Code on root level');
+  await expect(backend.contentFrame.locator('h1')).toContainText('Create new QR Code');
 
   await backend.formEngine.container.getByLabel('[source_host]').pressSequentially('localhost');
   await backend.formEngine.container.getByLabel('[target]').pressSequentially('t3://page?uid=1');
@@ -31,20 +31,20 @@ test('Create a new QR Code', async ({ page, backend }) => {
 test('Can edit a redirect by clicking the edit button', async ({ backend }) => {
   const sourceHost = await backend.contentFrame.locator('td:nth-child(3)').first().innerText();
   await backend.contentFrame.locator('[title="Edit record"]').first().click();
-  await expect(backend.contentFrame.locator('h1')).toContainText('Edit QR Code "' + sourceHost + ', ');
+  await expect(backend.contentFrame.locator('h1')).toContainText(sourceHost + ', ');
   await backend.contentFrame.getByRole('button', { name: 'Close' }).click();
   await expect(backend.contentFrame.locator('h1')).toContainText('QR Code Management');
 });
 
 test('See and download QR Code', async ({ page, backend }) => {
   await backend.contentFrame.getByRole('button', { name: 'Add QR Code' }).click();
-  await expect(backend.contentFrame.locator('h1')).toContainText('Create new QR Code on root level');
+  await expect(backend.contentFrame.locator('h1')).toContainText('Create new QR Code');
 
   await backend.formEngine.container.getByLabel('[source_host]').pressSequentially('example.org');
   await backend.formEngine.container.getByLabel('[target]').pressSequentially('t3://page?uid=1');
 
   await backend.contentFrame.getByRole('button', { name: 'Save' }).click();
-  await expect(backend.contentFrame.locator('h1')).toContainText('Edit QR Code "example.org, ');
+  await expect(backend.contentFrame.locator('h1')).toContainText('example.org, ');
   await backend.contentFrame.getByRole('button', { name: 'Close' }).click();
   await expect(backend.contentFrame.locator('h1')).toContainText('QR Code Management');
 

@@ -227,11 +227,11 @@ test.describe('Backend Users module', () => {
     });
 
     await test.step('First user can be edited', async () => {
-      const usernameFirstCompare = await contentFrame.locator('.beuser-comparison-table thead tr > th:nth-child(2)').textContent();
+      const usernameFirstCompare = await contentFrame.locator('.beuser-comparison-table thead tr > th:nth-child(2)').textContent() ?? '';
       await contentFrame.locator('.beuser-comparison-table thead tr > th:nth-child(2) a[title="Edit"]').click();
 
       await expect(contentFrame.locator('#EditDocumentController')).toBeVisible();
-      await expect(contentFrame.locator('h1')).toContainText(`Edit Admin "${usernameFirstCompare.trim().split('[')[0].trimEnd()}" on root level`);
+      await expect(contentFrame.locator('h1')).toContainText(usernameFirstCompare.trim().split('[')[0].trimEnd());
     });
 
     await test.step('Go back to compare view', async () => {
@@ -242,11 +242,11 @@ test.describe('Backend Users module', () => {
     });
 
     await test.step('Second user can be edited', async () => {
-      const usernameSecondCompare = await contentFrame.locator('.beuser-comparison-table thead tr > th:nth-child(3)').textContent();
+      const usernameSecondCompare = await contentFrame.locator('.beuser-comparison-table thead tr > th:nth-child(3)').textContent() ?? '';
       await contentFrame.locator('.beuser-comparison-table thead tr > th:nth-child(3) a[title="Edit"]').click();
 
       await expect(contentFrame.locator('#EditDocumentController')).toBeVisible();
-      await expect(contentFrame.locator('h1')).toContainText(`Edit Admin "${usernameSecondCompare.trim().split('[')[0].trimEnd()}" on root level`);
+      await expect(contentFrame.locator('h1')).toContainText(usernameSecondCompare.trim().split('[')[0].trimEnd());
 
       await contentFrame.getByRole('button', { name: 'Go back' });
     });
@@ -277,7 +277,7 @@ test.describe('Backend Users module', () => {
 
   async function openAndCloseTheEditForm(contentFrame: FrameLocator, username: string) {
     await expect(contentFrame.locator('#t3js-ui-block')).not.toBeVisible();
-    await expect(contentFrame.locator('h1')).toContainText('Edit Admin "' + username + '" on root level');
+    await expect(contentFrame.locator('h1')).toContainText(username);
 
     // Wait for FormEngine to be fully loaded by checking for the close button to be visible
     await expect(contentFrame.locator('div.module-docheader .btn.t3js-editform-close')).toBeVisible();
@@ -363,7 +363,7 @@ test.describe('Backend user group module', () => {
     const contentFrame = backend.contentFrame;
 
     await expect(contentFrame.locator('#t3js-ui-block')).not.toBeVisible();
-    await expect(contentFrame.locator('h1')).toContainText('Edit Backend usergroup "' + username + '" on root level');
+    await expect(contentFrame.locator('h1')).toContainText(username);
 
     // Wait for module to reload after closing form
     const moduleResponse = backend.waitForModuleResponse();
