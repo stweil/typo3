@@ -340,8 +340,8 @@ function subscribeEvents(): void {
       draggedFormElementDomElement,
       draggedFormPlaceholderDomElement
     ]: [
-      HTMLElement | JQuery,
-      HTMLElement | JQuery
+      HTMLElement,
+      HTMLElement
     ]
   ): void => {
     getViewModel().onAbstractViewDndStartBatch(
@@ -376,7 +376,7 @@ function subscribeEvents(): void {
       parentFormElementIdentifierPath,
       enclosingCompositeFormElement
     ]: [
-      JQuery,
+      HTMLElement,
       string,
       FormElement
     ]
@@ -399,7 +399,7 @@ function subscribeEvents(): void {
       previousFormElementIdentifierPath,
       nextFormElementIdentifierPath
     ]: [
-      JQuery,
+      HTMLElement,
       string,
       string,
       string
