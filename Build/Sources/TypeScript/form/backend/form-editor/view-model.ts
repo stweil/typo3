@@ -385,10 +385,7 @@ function stageComponentSetup(): void {
     ]))
   );
 
-  const stagePanelDomElement = getStage().getStagePanelDomElement();
-  const stagePanelEl: HTMLElement | null = stagePanelDomElement instanceof HTMLElement
-    ? stagePanelDomElement
-    : (stagePanelDomElement as JQuery).get(0) ?? null;
+  const stagePanelEl = getStage().getStagePanelDomElement();
   stagePanelEl?.addEventListener('click', function(e: MouseEvent) {
     const identifierAttr = getHelper().getDomElementDataAttribute('identifier');
     const target = e.target as Element;
@@ -1203,56 +1200,48 @@ export function closeEditor(): void {
   document.location.href = (el as HTMLAnchorElement)?.href ?? '';
 }
 
-export function setElementValidationErrorClass(element: HTMLElement | Element | JQuery | null, classIdentifier?: string): void {
-  const el: HTMLElement | null = element instanceof HTMLElement ? element : (element instanceof Element ? element as HTMLElement : (element ? (element as JQuery).get(0) ?? null : null));
+export function setElementValidationErrorClass(element: HTMLElement | null, classIdentifier?: string): void {
   if (getFormEditorApp().getUtility().isUndefinedOrNull(classIdentifier)) {
-    el?.classList.add(getHelper().getDomElementClassName('validationErrors'));
+    element?.classList.add(getHelper().getDomElementClassName('validationErrors'));
   } else {
-    el?.classList.add(getHelper().getDomElementClassName(classIdentifier));
+    element?.classList.add(getHelper().getDomElementClassName(classIdentifier));
   }
 }
 
-export function removeElementValidationErrorClass(element: HTMLElement | Element | JQuery | null, classIdentifier?: string): void {
-  const el: HTMLElement | null = element instanceof HTMLElement ? element : (element instanceof Element ? element as HTMLElement : (element ? (element as JQuery).get(0) ?? null : null));
+export function removeElementValidationErrorClass(element: HTMLElement | null, classIdentifier?: string): void {
   if (getFormEditorApp().getUtility().isUndefinedOrNull(classIdentifier)) {
-    el?.classList.remove(getHelper().getDomElementClassName('validationErrors'));
+    element?.classList.remove(getHelper().getDomElementClassName('validationErrors'));
   } else {
-    el?.classList.remove(getHelper().getDomElementClassName(classIdentifier));
+    element?.classList.remove(getHelper().getDomElementClassName(classIdentifier));
   }
 }
 
-export function showComponent(element: HTMLElement | Element | JQuery | null): void {
-  const el: HTMLElement | null = element instanceof HTMLElement ? element : (element instanceof Element ? element as HTMLElement : (element ? (element as JQuery).get(0) ?? null : null));
-  el?.classList.remove(getHelper().getDomElementClassName('hidden'));
-  if (el) { (el as HTMLElement).style.display = ''; }
+export function showComponent(element: HTMLElement | null): void {
+  element?.classList.remove(getHelper().getDomElementClassName('hidden'));
+  if (element) { element.style.display = ''; }
 }
 
-export function hideComponent(element: HTMLElement | Element | JQuery | null): void {
-  const el: HTMLElement | null = element instanceof HTMLElement ? element : (element instanceof Element ? element as HTMLElement : (element ? (element as JQuery).get(0) ?? null : null));
-  el?.classList.add(getHelper().getDomElementClassName('hidden'));
-  if (el) { (el as HTMLElement).style.display = 'none'; }
+export function hideComponent(element: HTMLElement | null): void {
+  element?.classList.add(getHelper().getDomElementClassName('hidden'));
+  if (element) { element.style.display = 'none'; }
 }
 
-export function enableButton(buttonElement: HTMLElement | Element | JQuery | null): void {
-  const el: HTMLElement | null = buttonElement instanceof HTMLElement ? buttonElement : (buttonElement instanceof Element ? buttonElement as HTMLElement : (buttonElement ? (buttonElement as JQuery).get(0) ?? null : null));
-  if (el) { (el as HTMLButtonElement).disabled = false; }
-  el?.classList.remove(getHelper().getDomElementClassName('disabled'));
+export function enableButton(buttonElement: HTMLElement | null): void {
+  if (buttonElement) { (buttonElement as HTMLButtonElement).disabled = false; }
+  buttonElement?.classList.remove(getHelper().getDomElementClassName('disabled'));
 }
 
-export function disableButton(buttonElement: HTMLElement | Element | JQuery | null): void {
-  const el: HTMLElement | null = buttonElement instanceof HTMLElement ? buttonElement : (buttonElement instanceof Element ? buttonElement as HTMLElement : (buttonElement ? (buttonElement as JQuery).get(0) ?? null : null));
-  if (el) { (el as HTMLButtonElement).disabled = true; }
-  el?.classList.add(getHelper().getDomElementClassName('disabled'));
+export function disableButton(buttonElement: HTMLElement | null): void {
+  if (buttonElement) { (buttonElement as HTMLButtonElement).disabled = true; }
+  buttonElement?.classList.add(getHelper().getDomElementClassName('disabled'));
 }
 
-export function setButtonActive(buttonElement: HTMLElement | Element | JQuery | null): void {
-  const el: HTMLElement | null = buttonElement instanceof HTMLElement ? buttonElement : (buttonElement instanceof Element ? buttonElement as HTMLElement : (buttonElement ? (buttonElement as JQuery).get(0) ?? null : null));
-  el?.classList.add(getHelper().getDomElementClassName('active'));
+export function setButtonActive(buttonElement: HTMLElement | null): void {
+  buttonElement?.classList.add(getHelper().getDomElementClassName('active'));
 }
 
-export function removeButtonActive(buttonElement: HTMLElement | Element | JQuery | null): void {
-  const el: HTMLElement | null = buttonElement instanceof HTMLElement ? buttonElement : (buttonElement instanceof Element ? buttonElement as HTMLElement : (buttonElement ? (buttonElement as JQuery).get(0) ?? null : null));
-  el?.classList.remove(getHelper().getDomElementClassName('active'));
+export function removeButtonActive(buttonElement: HTMLElement | null): void {
+  buttonElement?.classList.remove(getHelper().getDomElementClassName('active'));
 }
 
 export function showSaveButtonSpinnerIcon(): void {

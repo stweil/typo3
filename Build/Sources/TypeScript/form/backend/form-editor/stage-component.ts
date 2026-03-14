@@ -506,18 +506,14 @@ export function createAbstractViewFormElementToolbar(formElement: FormElement): 
 }
 
 export function createAndAddAbstractViewFormElementToolbar(
-  selectedFormElementDomElement: HTMLElement | JQuery,
+  selectedFormElementDomElement: HTMLElement,
   formElement: FormElement
 ): void {
-  const el: HTMLElement = selectedFormElementDomElement instanceof HTMLElement
-    ? selectedFormElementDomElement
-    : (selectedFormElementDomElement as JQuery).get(0);
-
   if (getUtility().isUndefinedOrNull(formElement)) {
     formElement = getCurrentlySelectedFormElement();
   }
 
-  const webComponent = el.querySelector('typo3-form-form-element-stage-item') as FormElementStageItem;
+  const webComponent = selectedFormElementDomElement.querySelector('typo3-form-form-element-stage-item') as FormElementStageItem;
 
   if (webComponent && webComponent.toolbarConfig) {
     webComponent.toolbarConfig = { ...webComponent.toolbarConfig, showToolbar: true };
@@ -526,7 +522,7 @@ export function createAndAddAbstractViewFormElementToolbar(
 
   const toolbar = createAbstractViewFormElementToolbar(formElement);
   if (toolbar) {
-    el.prepend(toolbar);
+    selectedFormElementDomElement.prepend(toolbar);
   }
 }
 
@@ -1034,14 +1030,12 @@ export function renderFileUploadTemplates(formElement: FormElement, template: HT
 export function bootstrap(
   this: typeof import('./stage-component'),
   _formEditorApp: FormEditor,
-  appendToDomElement: HTMLElement | JQuery,
+  appendToDomElement: HTMLElement,
   customConfiguration?: Configuration
 ): typeof import('./stage-component') {
   formEditorApp = _formEditorApp;
   assert(typeof appendToDomElement === 'object' && appendToDomElement !== null && !Array.isArray(appendToDomElement), 'Invalid parameter "appendToDomElement"', 1478992119);
-  stageDomElement = appendToDomElement instanceof HTMLElement
-    ? appendToDomElement
-    : (appendToDomElement as JQuery).get(0);
+  stageDomElement = appendToDomElement;
   configuration = merge({}, defaultConfiguration, customConfiguration ?? {}) as Configuration;
   Helper.bootstrap(formEditorApp);
   return this;

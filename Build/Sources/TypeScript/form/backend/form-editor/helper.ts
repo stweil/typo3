@@ -14,7 +14,6 @@
 /**
  * Module: @typo3/form/backend/form-editor/helper
  */
-import $ from 'jquery';
 import { merge } from 'lodash-es';
 import type {
   FormEditor,
@@ -227,31 +226,6 @@ export function getTemplatePropertyElement(
   templateDomElement: HTMLElement
 ): HTMLElement | null {
   return templateDomElement.querySelector(getDomElementDataAttribute('templateProperty', 'bracesWithKeyValue', [templatePropertyName]));
-}
-
-/**
- * Legacy, jQuery based template retrieval. Use `getTemplateElement()` instead.
- *
- * @todo Will be removed when jQuery migration is complete.
- */
-export function getTemplate(templateName: string): JQuery {
-  if (!getUtility().isUndefinedOrNull(configuration.domElementDataAttributeValues[templateName])) {
-    templateName = getDomElementDataAttributeValue(templateName);
-  }
-
-  return $(getDomElementDataAttribute('template', 'bracesWithKeyValue', [templateName]));
-}
-
-/**
- * Legacy, jQuery based template retrieval. Use `getTemplatePropertyElement()` instead.
- *
- * @todo Will be removed when jQuery migration is complete.
- */
-export function getTemplatePropertyDomElement(
-  templatePropertyName: string,
-  templateDomElement: HTMLElement | JQuery
-): JQuery {
-  return $(getDomElementDataAttribute('templateProperty', 'bracesWithKeyValue', [templatePropertyName]), $(templateDomElement));
 }
 
 export function bootstrap(_formEditorApp: FormEditor): void {

@@ -174,11 +174,11 @@ export function setTreeNodeTitle(title?: string, formElement?: FormElement): voi
 /**
  * Get tree node for a form element
  *
- * Returns a jQuery-wrapped DOM element for the specified form element.
+ * Returns the DOM element for the specified form element.
  * Supports both FormElement objects and identifier path strings.
  *
  * @param formElement - Form element or identifier path (defaults to currently selected)
- * @returns jQuery object containing the tree node element
+ * @returns The tree node element or null if not found
  */
 export function getTreeNode(formElement?: FormElement | string): HTMLElement | null {
   let identifierPath: string;
@@ -204,7 +204,7 @@ export function getTreeNode(formElement?: FormElement | string): HTMLElement | n
 /**
  * Get all tree nodes
  *
- * @returns jQuery object containing all tree item elements
+ * @returns NodeList containing all tree item elements
  */
 export function getAllTreeNodes(): NodeListOf<HTMLElement> {
   return treeDomElement
@@ -257,7 +257,7 @@ export function clearAllValidationErrors(): void {
 /**
  * Get the tree DOM element
  *
- * @returns jQuery object containing the tree's root DOM element
+ * @returns The tree's root DOM element or null
  */
 export function getTreeDomElement(): HTMLElement | null {
   return treeDomElement;
@@ -285,8 +285,8 @@ export function buildTitleByFormElement(formElement: FormElement): HTMLElement {
 /**
  * Get tree node within DOM element
  *
- * @param element - HTML or jQuery element to search within
- * @returns jQuery object containing the tree item content
+ * @param element - HTML element to search within
+ * @returns The tree item content element or null
  */
 export function getTreeNodeWithinDomElement(element: HTMLElement | null): HTMLElement | null {
   return element ? element.querySelector('.tree-item-content') : null;
@@ -295,7 +295,7 @@ export function getTreeNodeWithinDomElement(element: HTMLElement | null): HTMLEl
 /**
  * Get tree node identifier path from DOM element
  *
- * @param element - HTML or jQuery element
+ * @param element - HTML element
  * @returns Identifier path of the tree node
  */
 export function getTreeNodeIdentifierPathWithinDomElement(element: HTMLElement | null): string {
@@ -306,8 +306,8 @@ export function getTreeNodeIdentifierPathWithinDomElement(element: HTMLElement |
 /**
  * Get parent tree node within DOM element
  *
- * @param element - HTML or jQuery element
- * @returns jQuery object containing the parent tree node
+ * @param element - HTML element
+ * @returns The parent tree node element or null
  */
 export function getParentTreeNodeWithinDomElement(element: HTMLElement | null): HTMLElement | null {
   // Navigate up to parent list item (use the tree structure: div.node > parent li)
@@ -329,7 +329,7 @@ export function getParentTreeNodeIdentifierPathWithinDomElement(element: HTMLEle
 /**
  * Get sibling tree node identifier path from DOM element
  *
- * @param element - HTML or jQuery element
+ * @param element - HTML element
  * @param position - Position of sibling ('prev' or 'next')
  * @returns Identifier path of the sibling tree node
  */
@@ -350,7 +350,7 @@ export function getSiblingTreeNodeIdentifierPathWithinDomElement(
 /**
  * Render composite form element children as sortable list (for backward compatibility)
  *
- * @returns Empty jQuery element (actual rendering handled by web component)
+ * @returns Empty element (actual rendering handled by web component)
  */
 export function renderCompositeFormElementChildsAsSortableList(): HTMLElement {
   // This is called during initialization, we just return an empty element
@@ -411,7 +411,7 @@ function waitForTreeContainer(): Promise<FormEditorTreeContainer | null> {
  * Handles both synchronous and asynchronous tree container discovery.
  *
  * @param _formEditorApp - FormEditor application instance
- * @param appendToDomElement - jQuery element to append tree to
+ * @param appendToDomElement - DOM element to append tree to
  * @returns Object containing all exported tree adapter functions
  */
 export function bootstrap(
