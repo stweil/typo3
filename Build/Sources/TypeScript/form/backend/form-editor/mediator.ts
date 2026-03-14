@@ -563,7 +563,7 @@ function subscribeEvents(): void {
       parentFormElementIdentifierPath,
       enclosingCompositeFormElement
     ]: [
-      JQuery,
+      HTMLElement | null,
       string,
       FormElement
     ]
@@ -586,7 +586,7 @@ function subscribeEvents(): void {
       previousFormElementIdentifierPath,
       nextFormElementIdentifierPath
     ]: [
-      JQuery,
+      HTMLElement | null,
       string,
       string,
       string

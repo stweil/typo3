@@ -333,14 +333,17 @@ function structureComponentSetup(): void {
 
   structureComponent = TreeComponent.bootstrap(
     getFormEditorApp(),
-    $(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
+    document.querySelector(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
       getHelper().getDomElementDataAttributeValue('structure')
     ]))
   );
 
-  $(getHelper().getDomElementDataIdentifierSelector('iconMailform'),
-    $(getHelper().getDomElementDataIdentifierSelector('structureRootContainer'))
-  ).attr('title', 'identifier: ' + getRootFormElement().get('identifier'));
+  const iconMailformEl = document.querySelector(
+    getHelper().getDomElementDataIdentifierSelector('structureRootContainer')
+  )?.querySelector(getHelper().getDomElementDataIdentifierSelector('iconMailform'));
+  if (iconMailformEl) {
+    iconMailformEl.setAttribute('title', 'identifier: ' + getRootFormElement().get('identifier'));
+  }
 }
 
 /**
@@ -520,14 +523,14 @@ export function renewStructure(): void {
 }
 
 export function addStructureSelection(formElement?: FormElement): void {
-  getStructure().getTreeNode(formElement).addClass(getHelper().getDomElementClassName('selectedFormElement'));
+  getStructure().getTreeNode(formElement)?.classList.add(getHelper().getDomElementClassName('selectedFormElement'));
 }
 
 /**
  * @todo deprecate, method is unused
  */
 export function removeStructureSelection(formElement?: FormElement): void {
-  getStructure().getTreeNode(formElement).removeClass(getHelper().getDomElementClassName('selectedFormElement'));
+  getStructure().getTreeNode(formElement)?.classList.remove(getHelper().getDomElementClassName('selectedFormElement'));
 }
 
 export function removeAllStructureSelections(): void {
@@ -535,45 +538,45 @@ export function removeAllStructureSelections(): void {
     .removeClass(getHelper().getDomElementClassName('selectedFormElement'));
 }
 
-export function getStructureRootContainer(): JQuery {
-  return $(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
+export function getStructureRootContainer(): HTMLElement | null {
+  return document.querySelector(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
     getHelper().getDomElementDataAttributeValue('structureRootContainer')
   ]));
 }
 
-export function getStructureRootElement(): JQuery {
-  return $(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
+export function getStructureRootElement(): HTMLElement | null {
+  return document.querySelector(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
     getHelper().getDomElementDataAttributeValue('structureRootElement')
   ]));
 }
 
 export function removeStructureRootElementSelection(): void {
-  $(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
-    getHelper().getDomElementDataAttributeValue('structureRootContainer')
-  ])).removeClass(getHelper().getDomElementClassName('selectedRootFormElement'));
+  getStructureRootContainer()?.classList.remove(getHelper().getDomElementClassName('selectedRootFormElement'));
 }
 
 export function addStructureRootElementSelection(): void {
-  $(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
-    getHelper().getDomElementDataAttributeValue('structureRootContainer')
-  ])).addClass(getHelper().getDomElementClassName('selectedRootFormElement'));
+  getStructureRootContainer()?.classList.add(getHelper().getDomElementClassName('selectedRootFormElement'));
 }
 
 export function setStructureRootElementTitle(title?: string): void {
   if (getUtility().isUndefinedOrNull(title)) {
-    title = $('<span></span>')
-      .text((getRootFormElement().get('label') ? getRootFormElement().get('label') : getRootFormElement().get('identifier')))
-      .text();
+    const span = document.createElement('span');
+    span.textContent = getRootFormElement().get('label') ? getRootFormElement().get('label') : getRootFormElement().get('identifier');
+    title = span.textContent;
   }
-  getStructureRootElement().text(title);
+  const el = getStructureRootElement();
+  if (el) {
+    el.textContent = title;
+  }
 }
 
 export function addStructureValidationResults(): void {
   getStructure().clearAllValidationErrors();
 
-  getStructure().getAllTreeNodes()
-    .removeClass(getHelper().getDomElementClassName('validationErrors'))
-    .removeClass(getHelper().getDomElementClassName('validationChildHasErrors'));
+  getStructure().getAllTreeNodes().forEach((node) => {
+    node.classList.remove(getHelper().getDomElementClassName('validationErrors'));
+    node.classList.remove(getHelper().getDomElementClassName('validationChildHasErrors'));
+  });
 
   removeElementValidationErrorClass(getStructureRootContainer());
 
@@ -1116,30 +1119,26 @@ export function onAbstractViewDndUpdateBatch(
 }
 
 export function onStructureDndChangeBatch(
-  placeholderDomElement: HTMLElement | JQuery,
+  placeholderDomElement: HTMLElement | null,
   parentFormElementIdentifierPath: string,
   enclosingCompositeFormElement?: FormElement | string
 ): void {
   getStructure()
     .getAllTreeNodes()
-    .parent()
-    .removeClass(getHelper().getDomElementClassName('sortableHover'));
+    .forEach((node) => node.parentElement?.classList.remove(getHelper().getDomElementClassName('sortableHover')));
 
   getStage()
     .getAllFormElementDomElements()
-    .parent()
-    .removeClass(getHelper().getDomElementClassName('sortableHover'));
+    .each((_index: number, el: HTMLElement) => el.parentElement?.classList.remove(getHelper().getDomElementClassName('sortableHover')));
 
   if (enclosingCompositeFormElement) {
     getStructure()
       .getParentTreeNodeWithinDomElement(placeholderDomElement)
-      .parent()
-      .addClass(getHelper().getDomElementClassName('sortableHover'));
+      ?.parentElement?.classList.add(getHelper().getDomElementClassName('sortableHover'));
 
     getStage()
       .getAbstractViewFormElementDomElement(enclosingCompositeFormElement)
-      .parent()
-      .addClass(getHelper().getDomElementClassName('sortableHover'));
+      .get(0)?.parentElement?.classList.add(getHelper().getDomElementClassName('sortableHover'));
   }
 }
 
@@ -1147,7 +1146,7 @@ export function onStructureDndChangeBatch(
  * @throws 1479048646
  */
 export function onStructureDndUpdateBatch(
-  movedDomElement: HTMLElement | JQuery,
+  movedDomElement: HTMLElement | null,
   movedFormElementIdentifierPath: string,
   previousFormElementIdentifierPath: string,
   nextFormElementIdentifierPath: string
@@ -1168,7 +1167,7 @@ export function onStructureDndUpdateBatch(
 
   getStructure()
     .getTreeNodeWithinDomElement(movedDomElement)
-    .attr(
+    ?.setAttribute(
       getHelper().getDomElementDataAttribute('elementIdentifier'),
       movedFormElement.get('__identifierPath')
     );
@@ -1182,19 +1181,21 @@ export function closeEditor(): void {
   document.location.href = $(getHelper().getDomElementDataIdentifierSelector('buttonHeaderClose')).prop('href');
 }
 
-export function setElementValidationErrorClass(element: JQuery, classIdentifier?: string): void {
+export function setElementValidationErrorClass(element: HTMLElement | JQuery | null, classIdentifier?: string): void {
+  const el: HTMLElement | null = element instanceof HTMLElement ? element : (element ? (element as JQuery).get(0) ?? null : null);
   if (getFormEditorApp().getUtility().isUndefinedOrNull(classIdentifier)) {
-    element.addClass(getHelper().getDomElementClassName('validationErrors'));
+    el?.classList.add(getHelper().getDomElementClassName('validationErrors'));
   } else {
-    element.addClass(getHelper().getDomElementClassName(classIdentifier));
+    el?.classList.add(getHelper().getDomElementClassName(classIdentifier));
   }
 }
 
-export function removeElementValidationErrorClass(element: JQuery, classIdentifier?: string): void {
+export function removeElementValidationErrorClass(element: HTMLElement | JQuery | null, classIdentifier?: string): void {
+  const el: HTMLElement | null = element instanceof HTMLElement ? element : (element ? (element as JQuery).get(0) ?? null : null);
   if (getFormEditorApp().getUtility().isUndefinedOrNull(classIdentifier)) {
-    element.removeClass(getHelper().getDomElementClassName('validationErrors'));
+    el?.classList.remove(getHelper().getDomElementClassName('validationErrors'));
   } else {
-    element.removeClass(getHelper().getDomElementClassName(classIdentifier));
+    el?.classList.remove(getHelper().getDomElementClassName(classIdentifier));
   }
 }
 
