@@ -207,6 +207,33 @@ export function getDomElementDataIdentifierSelector(
   return getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [getDomElementDataAttributeValue(dataAttributeValueIdentifier)]);
 }
 
+/**
+ * Returns the template container element matching the given name.
+ * Note: callers typically need the *inner content* of the container, not the
+ * container itself. Use `element.innerHTML` or `element.firstElementChild`
+ * to obtain the actual template markup, analogous to the deprecated
+ * `getTemplate()` + jQuery's `.html()` pattern.
+ */
+export function getTemplateElement(templateName: string): HTMLTemplateElement | null {
+  if (!getUtility().isUndefinedOrNull(configuration.domElementDataAttributeValues[templateName])) {
+    templateName = getDomElementDataAttributeValue(templateName);
+  }
+
+  return document.querySelector<HTMLTemplateElement>(getDomElementDataAttribute('template', 'bracesWithKeyValue', [templateName]));
+}
+
+export function getTemplatePropertyElement(
+  templatePropertyName: string,
+  templateDomElement: HTMLElement
+): HTMLElement | null {
+  return templateDomElement.querySelector(getDomElementDataAttribute('templateProperty', 'bracesWithKeyValue', [templatePropertyName]));
+}
+
+/**
+ * Legacy, jQuery based template retrieval. Use `getTemplateElement()` instead.
+ *
+ * @todo Will be removed when jQuery migration is complete.
+ */
 export function getTemplate(templateName: string): JQuery {
   if (!getUtility().isUndefinedOrNull(configuration.domElementDataAttributeValues[templateName])) {
     templateName = getDomElementDataAttributeValue(templateName);
@@ -215,6 +242,11 @@ export function getTemplate(templateName: string): JQuery {
   return $(getDomElementDataAttribute('template', 'bracesWithKeyValue', [templateName]));
 }
 
+/**
+ * Legacy, jQuery based template retrieval. Use `getTemplatePropertyElement()` instead.
+ *
+ * @todo Will be removed when jQuery migration is complete.
+ */
 export function getTemplatePropertyDomElement(
   templatePropertyName: string,
   templateDomElement: HTMLElement | JQuery

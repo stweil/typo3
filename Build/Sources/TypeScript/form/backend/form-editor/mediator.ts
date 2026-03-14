@@ -14,7 +14,6 @@
 /**
  * Module: @typo3/form/backend/form-editor/mediator
  */
-import $ from 'jquery';
 import * as Helper from '@typo3/form/backend/form-editor/helper';
 
 import type {
@@ -116,11 +115,11 @@ function subscribeEvents(): void {
       number
     ]
   ): void => {
-    getViewModel().disableButton($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderRedo')));
+    getViewModel().disableButton(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderRedo')));
     if (currentStackSize > 1 && currentStackPointer <= currentStackSize) {
-      getViewModel().enableButton($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderUndo')));
+      getViewModel().enableButton(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderUndo')));
     } else {
-      getViewModel().disableButton($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderUndo')));
+      getViewModel().disableButton(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderUndo')));
     }
   });
 
@@ -238,8 +237,8 @@ function subscribeEvents(): void {
    * @subscribe view/undoButton/clicked
    */
   getPublisherSubscriber().subscribe('view/undoButton/clicked', (): void => {
-    getViewModel().disableButton($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderUndo')));
-    getViewModel().disableButton($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderRedo')));
+    getViewModel().disableButton(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderUndo')));
+    getViewModel().disableButton(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderRedo')));
     getFormEditorApp().undoApplicationState();
 
     if (getViewModel().getPreviewMode()) {
@@ -258,8 +257,8 @@ function subscribeEvents(): void {
    * @subscribe view/redoButton/clicked
    */
   getPublisherSubscriber().subscribe('view/redoButton/clicked', (): void => {
-    getViewModel().disableButton($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderUndo')));
-    getViewModel().disableButton($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderRedo')));
+    getViewModel().disableButton(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderUndo')));
+    getViewModel().disableButton(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderRedo')));
     getFormEditorApp().redoApplicationState();
 
     if (getViewModel().getPreviewMode()) {

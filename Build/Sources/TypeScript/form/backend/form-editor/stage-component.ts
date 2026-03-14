@@ -1011,7 +1011,7 @@ export function renderFileUploadTemplates(formElement: FormElement, template: JQ
 export function bootstrap(
   this: typeof import('./stage-component'),
   _formEditorApp: FormEditor,
-  appendToDomElement: JQuery,
+  appendToDomElement: HTMLElement | JQuery,
   customConfiguration?: Configuration
 ): typeof import('./stage-component') {
   formEditorApp = _formEditorApp;

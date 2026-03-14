@@ -14,7 +14,6 @@
 /**
  * Module: @typo3/form/backend/form-editor/view-model
  */
-import $ from 'jquery';
 import { cloneDeep } from 'lodash-es';
 import * as TreeComponent from '@typo3/form/backend/form-editor/tree-component-adapter';
 import * as ModalsComponent from '@typo3/form/backend/form-editor/modals-component';
@@ -333,7 +332,7 @@ function structureComponentSetup(): void {
 
   structureComponent = TreeComponent.bootstrap(
     getFormEditorApp(),
-    document.querySelector(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
+    document.querySelector<HTMLElement>(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
       getHelper().getDomElementDataAttributeValue('structure')
     ]))
   );
@@ -381,16 +380,22 @@ function stageComponentSetup(): void {
   );
   stageComponent = StageComponent.bootstrap(
     getFormEditorApp(),
-    $(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
+    document.querySelector<HTMLElement>(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
       getHelper().getDomElementDataAttributeValue('stageArea')
     ]))
   );
 
-  getStage().getStagePanelDomElement().on('click', function(e) {
+  const stagePanelDomElement = getStage().getStagePanelDomElement();
+  const stagePanelEl: HTMLElement | null = stagePanelDomElement instanceof HTMLElement
+    ? stagePanelDomElement
+    : (stagePanelDomElement as JQuery).get(0) ?? null;
+  stagePanelEl?.addEventListener('click', function(e: MouseEvent) {
+    const identifierAttr = getHelper().getDomElementDataAttribute('identifier');
+    const target = e.target as Element;
     if (
-      $(e.target).attr(getHelper().getDomElementDataAttribute('identifier')) === getHelper().getDomElementDataAttributeValue('stagePanelHeading')
-      || $(e.target).attr(getHelper().getDomElementDataAttribute('identifier')) === getHelper().getDomElementDataAttributeValue('stageSection')
-      || $(e.target).attr(getHelper().getDomElementDataAttribute('identifier')) === getHelper().getDomElementDataAttributeValue('stageArea')
+      target.getAttribute(identifierAttr) === getHelper().getDomElementDataAttributeValue('stagePanelHeading')
+      || target.getAttribute(identifierAttr) === getHelper().getDomElementDataAttributeValue('stageSection')
+      || target.getAttribute(identifierAttr) === getHelper().getDomElementDataAttributeValue('stageArea')
     ) {
       selectPageBatch(getFormEditorApp().getCurrentlySelectedPageIndex());
     }
@@ -406,11 +411,13 @@ function stageComponentSetup(): void {
  * @publish view/header/button/close/clicked
  */
 function buttonsSetup(): void {
-  $(getHelper().getDomElementDataIdentifierSelector('buttonHeaderSave')).on('click', function() {
+  const qs = (id: string): HTMLElement | null => document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector(id));
+
+  qs('buttonHeaderSave')?.addEventListener('click', function() {
     getPublisherSubscriber().publish('view/header/button/save/clicked', []);
   });
 
-  $(getHelper().getDomElementDataIdentifierSelector('buttonStageNewElementBottom')).on('click', function() {
+  qs('buttonStageNewElementBottom')?.addEventListener('click', function() {
     getPublisherSubscriber().publish(
       'view/stage/abstract/button/newElement/clicked', [
         'view/insertElements/perform/bottom'
@@ -418,24 +425,23 @@ function buttonsSetup(): void {
     );
   });
 
-  $(getHelper().getDomElementDataIdentifierSelector('buttonToggleStructure')).on('click', function() {
-    $(getHelper().getDomElementDataIdentifierSelector('structureSection')).toggleClass('formeditor-sidebar-expanded');
+  qs('buttonToggleStructure')?.addEventListener('click', function() {
+    qs('structureSection')?.classList.toggle('formeditor-sidebar-expanded');
   });
 
-  $(getHelper().getDomElementDataIdentifierSelector('buttonToggleInspector')).on('click', function() {
-    $(getHelper().getDomElementDataIdentifierSelector('inspectorSection')).toggleClass('formeditor-sidebar-expanded');
+  qs('buttonToggleInspector')?.addEventListener('click', function() {
+    qs('inspectorSection')?.classList.toggle('formeditor-sidebar-expanded');
   });
 
-
-  $(getHelper().getDomElementDataIdentifierSelector('buttonFormSettings')).on('click', function() {
+  qs('buttonFormSettings')?.addEventListener('click', function() {
     getPublisherSubscriber().publish('view/header/formSettings/clicked', []);
   });
 
-  $(getHelper().getDomElementDataIdentifierSelector('buttonNewPage')).on('click', function() {
+  qs('buttonNewPage')?.addEventListener('click', function() {
     getPublisherSubscriber().publish('view/structure/button/newPage/clicked', ['view/insertPages/perform']);
   });
 
-  $(getHelper().getDomElementDataIdentifierSelector('buttonHeaderClose')).on('click', function(e) {
+  qs('buttonHeaderClose')?.addEventListener('click', function(e) {
     if (!getFormEditorApp().getUnsavedContent()) {
       return;
     }
@@ -443,31 +449,31 @@ function buttonsSetup(): void {
     getPublisherSubscriber().publish('view/header/button/close/clicked', []);
   });
 
-  $(getHelper().getDomElementDataIdentifierSelector('buttonHeaderUndo')).on('click', function() {
+  qs('buttonHeaderUndo')?.addEventListener('click', function() {
     getPublisherSubscriber().publish('view/undoButton/clicked', []);
   });
 
-  $(getHelper().getDomElementDataIdentifierSelector('buttonHeaderRedo')).on('click', function() {
+  qs('buttonHeaderRedo')?.addEventListener('click', function() {
     getPublisherSubscriber().publish('view/redoButton/clicked', []);
   });
 
-  $(getHelper().getDomElementDataIdentifierSelector('buttonHeaderViewModeAbstract')).on('click', function() {
+  qs('buttonHeaderViewModeAbstract')?.addEventListener('click', function() {
     getPublisherSubscriber().publish('view/viewModeButton/abstract/clicked', []);
   });
 
-  $(getHelper().getDomElementDataIdentifierSelector('buttonHeaderViewModePreview')).on('click', function() {
+  qs('buttonHeaderViewModePreview')?.addEventListener('click', function() {
     getPublisherSubscriber().publish('view/viewModeButton/preview/clicked', []);
   });
 
-  $(getHelper().getDomElementDataIdentifierSelector('structureRootContainer')).on('click', function() {
+  qs('structureRootContainer')?.addEventListener('click', function() {
     getPublisherSubscriber().publish('view/structure/root/selected');
   });
 
-  $(getHelper().getDomElementDataIdentifierSelector('buttonHeaderPaginationNext')).on('click', function() {
+  qs('buttonHeaderPaginationNext')?.addEventListener('click', function() {
     getPublisherSubscriber().publish('view/paginationNext/clicked', []);
   });
 
-  $(getHelper().getDomElementDataIdentifierSelector('buttonHeaderPaginationPrevious')).on('click', function() {
+  qs('buttonHeaderPaginationPrevious')?.addEventListener('click', function() {
     getPublisherSubscriber().publish('view/paginationPrevious/clicked', []);
   });
 }
@@ -534,18 +540,21 @@ export function removeStructureSelection(formElement?: FormElement): void {
 }
 
 export function removeAllStructureSelections(): void {
-  $(getHelper().getDomElementClassName('selectedFormElement', true), getStructure().getTreeDomElement())
-    .removeClass(getHelper().getDomElementClassName('selectedFormElement'));
+  const treeDom = getStructure().getTreeDomElement();
+  if (treeDom) {
+    treeDom.querySelectorAll(getHelper().getDomElementClassName('selectedFormElement', true))
+      .forEach((el) => el.classList.remove(getHelper().getDomElementClassName('selectedFormElement')));
+  }
 }
 
 export function getStructureRootContainer(): HTMLElement | null {
-  return document.querySelector(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
+  return document.querySelector<HTMLElement>(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
     getHelper().getDomElementDataAttributeValue('structureRootContainer')
   ]));
 }
 
 export function getStructureRootElement(): HTMLElement | null {
-  return document.querySelector(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
+  return document.querySelector<HTMLElement>(getHelper().getDomElementDataAttribute('identifier', 'bracesWithKeyValue', [
     getHelper().getDomElementDataAttributeValue('structureRootElement')
   ]));
 }
@@ -689,8 +698,8 @@ export function renderInspectorEditors(formElement?: FormElement | string): void
 
 export function showInspectorSidebar(): void {
   // Expand inspector sidebar if expander button is visible
-  if (document.querySelector(getHelper().getDomElementDataIdentifierSelector('buttonToggleInspector'))?.getClientRects().length === 1) {
-    document.querySelector(getHelper().getDomElementDataIdentifierSelector('inspectorSection')).classList.add('formeditor-sidebar-expanded');
+  if (document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonToggleInspector'))?.getClientRects().length === 1) {
+    document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('inspectorSection')).classList.add('formeditor-sidebar-expanded');
   }
 }
 
@@ -734,12 +743,13 @@ export function renderUndoRedo(): void {
  * @publish view/stage/abstract/render/preProcess
  */
 export function renderAbstractStageArea(): void {
-  setButtonActive($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderViewModeAbstract')));
-  removeButtonActive($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderViewModePreview')));
+  setButtonActive(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderViewModeAbstract')));
+  removeButtonActive(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderViewModePreview')));
 
-  $(getHelper().getDomElementDataIdentifierSelector('moduleWrapper'))
-    .addClass(getHelper().getDomElementClassName('viewModeAbstract'))
-    .removeClass(getHelper().getDomElementClassName('viewModePreview'));
+  document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('moduleWrapper'))
+    ?.classList.add(getHelper().getDomElementClassName('viewModeAbstract'));
+  document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('moduleWrapper'))
+    ?.classList.remove(getHelper().getDomElementClassName('viewModePreview'));
 
   const render = (callback: () => void): void => {
     getStage().renderAbstractStageArea(undefined, callback);
@@ -747,14 +757,18 @@ export function renderAbstractStageArea(): void {
 
   const renderPostProcess = (): void => {
     const formElementTypeDefinition = getFormElementDefinition(getCurrentlySelectedFormElement(), undefined);
-    getStage().getAllFormElementDomElements().hover(function(this: HTMLElement) {
-      getStage().getAllFormElementDomElements().parent().removeClass(getHelper().getDomElementClassName('sortableHover'));
-      if (
-        $(this).parent().hasClass(getHelper().getDomElementClassName('formElementIsComposit'))
-        && !$(this).parent().hasClass(getHelper().getDomElementClassName('formElementIsTopLevel'))
-      ) {
-        $(this).parent().addClass(getHelper().getDomElementClassName('sortableHover'));
-      }
+    getStage().getAllFormElementDomElements().each(function(_i: number, el: HTMLElement) {
+      el.addEventListener('mouseenter', function() {
+        getStage().getAllFormElementDomElements().each((_j: number, other: HTMLElement) => {
+          other.parentElement?.classList.remove(getHelper().getDomElementClassName('sortableHover'));
+        });
+        if (
+          el.parentElement?.classList.contains(getHelper().getDomElementClassName('formElementIsComposit'))
+          && !el.parentElement?.classList.contains(getHelper().getDomElementClassName('formElementIsTopLevel'))
+        ) {
+          el.parentElement?.classList.add(getHelper().getDomElementClassName('sortableHover'));
+        }
+      });
     });
 
     if (
@@ -762,11 +776,11 @@ export function renderAbstractStageArea(): void {
       && !formElementTypeDefinition._isCompositeFormElement
       && !getFormEditorApp().isRootFormElementSelected()
     ) {
-      hideComponent($(getHelper().getDomElementDataIdentifierSelector('buttonStageNewElementBottom')));
-      hideComponent($(getHelper().getDomElementDataIdentifierSelector('stageNewElementRow')));
+      hideComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonStageNewElementBottom')));
+      hideComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('stageNewElementRow')));
     } else {
-      showComponent($(getHelper().getDomElementDataIdentifierSelector('buttonStageNewElementBottom')));
-      showComponent($(getHelper().getDomElementDataIdentifierSelector('stageNewElementRow')));
+      showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonStageNewElementBottom')));
+      showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('stageNewElementRow')));
     }
 
     refreshSelectedElementItemsBatch();
@@ -784,14 +798,15 @@ export function renderAbstractStageArea(): void {
  * @publish view/stage/preview/render/postProcess
  */
 export function renderPreviewStageArea(html: string): void {
-  setButtonActive($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderViewModePreview')));
-  removeButtonActive($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderViewModeAbstract')));
+  setButtonActive(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderViewModePreview')));
+  removeButtonActive(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderViewModeAbstract')));
 
-  $(getHelper().getDomElementDataIdentifierSelector('moduleWrapper'))
-    .addClass(getHelper().getDomElementClassName('viewModePreview'))
-    .removeClass(getHelper().getDomElementClassName('viewModeAbstract'));
+  document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('moduleWrapper'))
+    ?.classList.add(getHelper().getDomElementClassName('viewModePreview'));
+  document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('moduleWrapper'))
+    ?.classList.remove(getHelper().getDomElementClassName('viewModeAbstract'));
 
-  hideComponent($(getHelper().getDomElementDataIdentifierSelector('buttonStageNewElementBottom')));
+  hideComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonStageNewElementBottom')));
   getStage().renderPreviewStageArea(html);
   getPublisherSubscriber().publish('view/stage/preview/render/postProcess');
 }
@@ -1043,14 +1058,14 @@ export function selectPageBatch(pageIndex: number): void {
 }
 
 export function removeAllStageElementSelectionsBatch(): void {
-  getStage().getAllFormElementDomElements().removeClass(getHelper().getDomElementClassName('selectedFormElement'));
+  getStage().getAllFormElementDomElements().each((_i: number, el: HTMLElement) => el.classList.remove(getHelper().getDomElementClassName('selectedFormElement')));
   removeStagePanelSelection();
-  getStage().getAllFormElementDomElements().parent().removeClass(getHelper().getDomElementClassName('sortableHover'));
+  getStage().getAllFormElementDomElements().each((_i: number, el: HTMLElement) => el.parentElement?.classList.remove(getHelper().getDomElementClassName('sortableHover')));
 }
 
 export function onViewReadyBatch(): void {
-  hideComponent($(getHelper().getDomElementDataIdentifierSelector('buttonStageNewElementBottom')));
-  hideComponent($(getHelper().getDomElementDataIdentifierSelector('stageNewElementRow')));
+  hideComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonStageNewElementBottom')));
+  hideComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('stageNewElementRow')));
 
   setStageHeadline();
   setStructureRootElementTitle();
@@ -1060,20 +1075,23 @@ export function onViewReadyBatch(): void {
   renderInspectorEditors();
   renderPagination();
 
-  hideComponent($(getHelper().getDomElementDataIdentifierSelector('moduleLoadingIndicator')));
-  showComponent($(getHelper().getDomElementDataIdentifierSelector('moduleWrapper')));
-  showComponent($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderSave')));
-  showComponent($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderClose')));
-  showComponent($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderUndo')));
-  showComponent($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderRedo')));
-  setButtonActive($(getHelper().getDomElementDataIdentifierSelector('buttonHeaderViewModeAbstract')));
+  hideComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('moduleLoadingIndicator')));
+  showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('moduleWrapper')));
+  showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderSave')));
+  showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderClose')));
+  showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderUndo')));
+  showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderRedo')));
+  setButtonActive(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderViewModeAbstract')));
 }
 
 export function onAbstractViewDndStartBatch(
   draggedFormElementDomElement: HTMLElement | JQuery,
   draggedFormPlaceholderDomElement: HTMLElement | JQuery
 ): void {
-  $(draggedFormPlaceholderDomElement).removeClass(getHelper().getDomElementClassName('sortableHover'));
+  const el = draggedFormPlaceholderDomElement instanceof HTMLElement
+    ? draggedFormPlaceholderDomElement
+    : (draggedFormPlaceholderDomElement as JQuery).get(0);
+  el?.classList.remove(getHelper().getDomElementClassName('sortableHover'));
 }
 
 export function onAbstractViewDndChangeBatch(
@@ -1178,11 +1196,12 @@ export function onStructureDndUpdateBatch(
  * ************************************************************/
 
 export function closeEditor(): void {
-  document.location.href = $(getHelper().getDomElementDataIdentifierSelector('buttonHeaderClose')).prop('href');
+  const el = document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderClose'));
+  document.location.href = (el as HTMLAnchorElement)?.href ?? '';
 }
 
-export function setElementValidationErrorClass(element: HTMLElement | JQuery | null, classIdentifier?: string): void {
-  const el: HTMLElement | null = element instanceof HTMLElement ? element : (element ? (element as JQuery).get(0) ?? null : null);
+export function setElementValidationErrorClass(element: HTMLElement | Element | JQuery | null, classIdentifier?: string): void {
+  const el: HTMLElement | null = element instanceof HTMLElement ? element : (element instanceof Element ? element as HTMLElement : (element ? (element as JQuery).get(0) ?? null : null));
   if (getFormEditorApp().getUtility().isUndefinedOrNull(classIdentifier)) {
     el?.classList.add(getHelper().getDomElementClassName('validationErrors'));
   } else {
@@ -1190,8 +1209,8 @@ export function setElementValidationErrorClass(element: HTMLElement | JQuery | n
   }
 }
 
-export function removeElementValidationErrorClass(element: HTMLElement | JQuery | null, classIdentifier?: string): void {
-  const el: HTMLElement | null = element instanceof HTMLElement ? element : (element ? (element as JQuery).get(0) ?? null : null);
+export function removeElementValidationErrorClass(element: HTMLElement | Element | JQuery | null, classIdentifier?: string): void {
+  const el: HTMLElement | null = element instanceof HTMLElement ? element : (element instanceof Element ? element as HTMLElement : (element ? (element as JQuery).get(0) ?? null : null));
   if (getFormEditorApp().getUtility().isUndefinedOrNull(classIdentifier)) {
     el?.classList.remove(getHelper().getDomElementClassName('validationErrors'));
   } else {
@@ -1199,39 +1218,59 @@ export function removeElementValidationErrorClass(element: HTMLElement | JQuery 
   }
 }
 
-export function showComponent(element: JQuery): void {
-  element.removeClass(getHelper().getDomElementClassName('hidden')).show();
+export function showComponent(element: HTMLElement | Element | JQuery | null): void {
+  const el: HTMLElement | null = element instanceof HTMLElement ? element : (element instanceof Element ? element as HTMLElement : (element ? (element as JQuery).get(0) ?? null : null));
+  el?.classList.remove(getHelper().getDomElementClassName('hidden'));
+  if (el) { (el as HTMLElement).style.display = ''; }
 }
 
-export function hideComponent(element: JQuery): void {
-  element.addClass(getHelper().getDomElementClassName('hidden')).hide();
+export function hideComponent(element: HTMLElement | Element | JQuery | null): void {
+  const el: HTMLElement | null = element instanceof HTMLElement ? element : (element instanceof Element ? element as HTMLElement : (element ? (element as JQuery).get(0) ?? null : null));
+  el?.classList.add(getHelper().getDomElementClassName('hidden'));
+  if (el) { (el as HTMLElement).style.display = 'none'; }
 }
 
-export function enableButton(buttonElement: JQuery): void {
-  buttonElement.prop('disabled', false).removeClass(getHelper().getDomElementClassName('disabled'));
+export function enableButton(buttonElement: HTMLElement | Element | JQuery | null): void {
+  const el: HTMLElement | null = buttonElement instanceof HTMLElement ? buttonElement : (buttonElement instanceof Element ? buttonElement as HTMLElement : (buttonElement ? (buttonElement as JQuery).get(0) ?? null : null));
+  if (el) { (el as HTMLButtonElement).disabled = false; }
+  el?.classList.remove(getHelper().getDomElementClassName('disabled'));
 }
 
-export function disableButton(buttonElement: JQuery): void {
-  buttonElement.prop('disabled', 'disabled').addClass(getHelper().getDomElementClassName('disabled'));
+export function disableButton(buttonElement: HTMLElement | Element | JQuery | null): void {
+  const el: HTMLElement | null = buttonElement instanceof HTMLElement ? buttonElement : (buttonElement instanceof Element ? buttonElement as HTMLElement : (buttonElement ? (buttonElement as JQuery).get(0) ?? null : null));
+  if (el) { (el as HTMLButtonElement).disabled = true; }
+  el?.classList.add(getHelper().getDomElementClassName('disabled'));
 }
 
-export function setButtonActive(buttonElement: JQuery): void {
-  buttonElement.addClass(getHelper().getDomElementClassName('active'));
+export function setButtonActive(buttonElement: HTMLElement | Element | JQuery | null): void {
+  const el: HTMLElement | null = buttonElement instanceof HTMLElement ? buttonElement : (buttonElement instanceof Element ? buttonElement as HTMLElement : (buttonElement ? (buttonElement as JQuery).get(0) ?? null : null));
+  el?.classList.add(getHelper().getDomElementClassName('active'));
 }
 
-export function removeButtonActive(buttonElement: JQuery): void {
-  buttonElement.removeClass(getHelper().getDomElementClassName('active'));
+export function removeButtonActive(buttonElement: HTMLElement | Element | JQuery | null): void {
+  const el: HTMLElement | null = buttonElement instanceof HTMLElement ? buttonElement : (buttonElement instanceof Element ? buttonElement as HTMLElement : (buttonElement ? (buttonElement as JQuery).get(0) ?? null : null));
+  el?.classList.remove(getHelper().getDomElementClassName('active'));
 }
 
 export function showSaveButtonSpinnerIcon(): void {
   Icons.getIcon(getHelper().getDomElementDataAttributeValue('iconSaveSpinner'), Icons.sizes.small).then(function(markup) {
-    $(getHelper().getDomElementDataIdentifierSelector('iconSave')).replaceWith($(markup));
+    const target = document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('iconSave'));
+    if (target) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = markup;
+      target.replaceWith(tmp.firstElementChild ?? tmp);
+    }
   });
 }
 
 export function showSaveButtonSaveIcon(): void {
   Icons.getIcon(getHelper().getDomElementDataAttributeValue('iconSave'), Icons.sizes.small).then(function(markup) {
-    $(getHelper().getDomElementDataIdentifierSelector('iconSaveSpinner')).replaceWith($(markup));
+    const target = document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('iconSaveSpinner'));
+    if (target) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = markup;
+      target.replaceWith(tmp.firstElementChild ?? tmp);
+    }
   });
 }
 

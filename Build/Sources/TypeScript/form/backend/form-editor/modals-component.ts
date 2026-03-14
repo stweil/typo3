@@ -14,7 +14,6 @@
 /**
  * Module: @typo3/form/backend/form-editor/modals-component
  */
-import $ from 'jquery';
 import * as Helper from '@typo3/form/backend/form-editor/helper';
 import { merge } from 'lodash-es';
 import Modal, { type Button } from '@typo3/backend/modal';
@@ -151,7 +150,7 @@ function showRemoveElementModal<T extends keyof PublisherSubscriberTopicArgument
  * @throws 1478910954
  */
 function insertElementsModalSetup(
-  modalContent: JQuery,
+  modalContent: DocumentFragment,
   publisherTopicName: keyof PublisherSubscriberTopicArgumentsMap,
   configuration?: InsertElementsModalConfiguration
 ): void {
@@ -168,13 +167,12 @@ function insertElementsModalSetup(
         && Array.isArray(configuration[key])
       ) {
         for (let i = 0, len = configuration[key].length; i < len; ++i) {
-          $(
+          modalContent.querySelectorAll(
             getHelper().getDomElementDataAttribute(
               'fullElementType',
               'bracesWithKeyValue', [configuration[key][i]]
-            ),
-            modalContent
-          ).addClass(getHelper().getDomElementClassName('disabled'));
+            )
+          ).forEach((el) => el.classList.add(getHelper().getDomElementClassName('disabled')));
         }
       }
 
@@ -182,27 +180,22 @@ function insertElementsModalSetup(
         key === 'onlyEnableElementTypes'
         && Array.isArray(configuration[key])
       ) {
-        $(
-          getHelper().getDomElementDataAttribute(
-            'fullElementType',
-            'bracesWithKey'
-          ),
-          modalContent
-        ).each(function(this: HTMLElement) {
-          for (let i = 0, len = configuration[key].length; i < len; ++i) {
-            const that = $(this);
-            if (that.data(getHelper().getDomElementDataAttribute('elementType')) !== configuration[key][i]) {
-              that.addClass(getHelper().getDomElementClassName('disabled'));
-            }
+        modalContent.querySelectorAll(
+          getHelper().getDomElementDataAttribute('fullElementType', 'bracesWithKey')
+        ).forEach((el: Element) => {
+          const elementType = el.getAttribute(getHelper().getDomElementDataAttribute('elementType'));
+          const isEnabled = configuration[key].some((type) => type === elementType);
+          if (!isEnabled) {
+            el.classList.add(getHelper().getDomElementClassName('disabled'));
           }
         });
       }
     }
   }
 
-  $(modalContent).on('typo3:form:insert-element-click', function(e: Event) {
+  [...modalContent.children].forEach(el => el.addEventListener('typo3:form:insert-element-click', function(e: Event) {
     getPublisherSubscriber().publish(publisherTopicName, [(<CustomEvent> e).detail.item.identifier]);
-  });
+  }));
 }
 
 /**
@@ -210,7 +203,7 @@ function insertElementsModalSetup(
  * @throws 1479161268
  */
 function _validationErrorsModalSetup(
-  modalContent: JQuery,
+  modalContent: DocumentFragment,
   validationResults: ValidationResultsRecursive
 ): void {
   let formElement, newRowItem;
@@ -221,12 +214,10 @@ function _validationErrorsModalSetup(
     1479161268
   );
 
-  const rowItemTemplate = $(
-    getHelper().getDomElementDataIdentifierSelector('rowItem'),
-    modalContent
-  ).clone();
+  const rowItemSelector = getHelper().getDomElementDataIdentifierSelector('rowItem');
+  const rowItemTemplate = modalContent.querySelector(rowItemSelector)?.cloneNode(true) as HTMLElement | null;
 
-  $(getHelper().getDomElementDataIdentifierSelector('rowItem'), modalContent).remove();
+  modalContent.querySelectorAll(rowItemSelector).forEach((el) => el.remove());
 
   for (let i = 0, len = validationResults.length; i < len; ++i) {
     let hasError = false;
@@ -243,24 +234,30 @@ function _validationErrorsModalSetup(
     if (hasError) {
       formElement = getFormEditorApp()
         .getFormElementByIdentifierPath(validationResults[i].formElementIdentifierPath);
-      newRowItem = rowItemTemplate.clone();
-      $(getHelper().getDomElementDataIdentifierSelector('rowLink'), newRowItem)
-        .attr(
+      newRowItem = rowItemTemplate?.cloneNode(true) as HTMLElement | null;
+      const rowLink = newRowItem?.querySelector(getHelper().getDomElementDataIdentifierSelector('rowLink'));
+      if (rowLink) {
+        rowLink.setAttribute(
           getHelper().getDomElementDataAttribute('elementIdentifier'),
           validationResults[i].formElementIdentifierPath
-        )
-        .get(0).replaceChildren(_buildTitleByFormElement(formElement));
-      $(getHelper().getDomElementDataIdentifierSelector('rowsContainer'), modalContent)
-        .append(newRowItem);
+        );
+        rowLink.replaceChildren(_buildTitleByFormElement(formElement));
+      }
+      const rowsContainer = modalContent.querySelector(getHelper().getDomElementDataIdentifierSelector('rowsContainer'));
+      if (rowsContainer && newRowItem) {
+        rowsContainer.append(newRowItem);
+      }
     }
   }
 
-  $('a', modalContent).on('click', function(this: HTMLElement) {
-    getPublisherSubscriber().publish('view/modal/validationErrors/element/clicked', [
-      $(this).attr(getHelper().getDomElementDataAttribute('elementIdentifier'))
-    ]);
-    $('a', modalContent).off();
-    Modal.currentModal.hideModal();
+  modalContent.querySelectorAll<HTMLAnchorElement>('a').forEach((a) => {
+    a.addEventListener('click', function() {
+      getPublisherSubscriber().publish('view/modal/validationErrors/element/clicked', [
+        a.getAttribute(getHelper().getDomElementDataAttribute('elementIdentifier'))
+      ]);
+      modalContent.querySelectorAll('a').forEach((link) => link.replaceWith(link.cloneNode(true)));
+      Modal.currentModal.hideModal();
+    });
   });
 }
 
@@ -349,15 +346,15 @@ export function showInsertElementsModal(
   publisherTopicName: keyof PublisherSubscriberTopicArgumentsMap,
   configuration: InsertElementsModalConfiguration
 ): void {
-  const template = getHelper().getTemplate('templateInsertElements');
-  if (template.length > 0) {
-    const html = $(template.html());
-    insertElementsModalSetup(html, publisherTopicName, configuration);
+  const template = getHelper().getTemplateElement('templateInsertElements');
+  if (template) {
+    const content = document.importNode(template.content, true);
+    insertElementsModalSetup(content, publisherTopicName, configuration);
 
     Modal.advanced({
       title: getFormElementDefinition(getRootFormElement(), 'modalInsertElementsDialogTitle'),
       size: Modal.sizes.large,
-      content: $(html),
+      content,
     });
   }
 }
@@ -365,15 +362,15 @@ export function showInsertElementsModal(
 export function showInsertPagesModal(
   publisherTopicName: keyof PublisherSubscriberTopicArgumentsMap,
 ): void {
-  const template = getHelper().getTemplate('templateInsertPages');
-  if (template.length > 0) {
-    const html = $(template.html());
-    insertElementsModalSetup(html, publisherTopicName);
+  const template = getHelper().getTemplateElement('templateInsertPages');
+  if (template) {
+    const content = document.importNode(template.content, true);
+    insertElementsModalSetup(content, publisherTopicName);
 
     Modal.advanced({
       title: getFormElementDefinition(getRootFormElement(), 'modalInsertPagesDialogTitle'),
       size: Modal.sizes.small,
-      content: $(html),
+      content,
     });
   }
 }
@@ -391,14 +388,14 @@ export function showValidationErrorsModal(validationResults: ValidationResultsRe
     }
   });
 
-  const template = getHelper().getTemplate('templateValidationErrors');
-  if (template.length > 0) {
-    const html = $(template.html()).clone();
-    _validationErrorsModalSetup(html, validationResults);
+  const template = getHelper().getTemplateElement('templateValidationErrors');
+  if (template) {
+    const content = document.importNode(template.content, true);
+    _validationErrorsModalSetup(content, validationResults);
 
     Modal.show(
       getFormElementDefinition(getRootFormElement(), 'modalValidationErrorsDialogTitle'),
-      html,
+      content,
       Severity.error,
       modalButtons
     );
