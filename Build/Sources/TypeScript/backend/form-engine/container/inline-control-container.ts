@@ -36,6 +36,7 @@ enum Selectors {
   controlSectionSelector = '.t3js-formengine-irre-control',
   createNewRecordButtonSelector = '.t3js-create-new-button',
   createNewRecordBySelectorSelector = '.t3js-create-new-selector',
+  createNewRecordByPresetSelector = '.t3js-create-new-preset',
   deleteRecordButtonSelector = '.t3js-editform-delete-inline-record',
   enableDisableRecordButtonSelector = '.t3js-toggle-visibility-button',
   infoWindowButton = '[data-action="infowindow"]',
@@ -92,8 +93,8 @@ interface UniqueDefinitionUsed {
 interface InlineEndpoints {
   create: string;
   details: string;
-  synchronizelocalize: string;
-  expandcollapse: string;
+  synchronizelocalize: string | null;
+  expandcollapse: string | null;
 }
 
 class InlineControlContainer extends HTMLElement {
@@ -127,25 +128,38 @@ class InlineControlContainer extends HTMLElement {
     return parseInt(this.dataset.max, 10) || 0;
   }
 
-  public get type(): 'record' | 'file' {
-    return this.dataset.type === 'file' ? 'file' : 'record';
+  public get type(): 'record' | 'file' | 'language' {
+    const type = this.dataset.type;
+    if (type === 'file' || type === 'language') {
+      return type;
+    }
+    return 'record';
   }
 
   private get endpoints(): InlineEndpoints {
-    if (this.type === 'file') {
-      return {
-        create: 'file_reference_create',
-        details: 'file_reference_details',
-        synchronizelocalize: 'file_reference_synchronizelocalize',
-        expandcollapse: 'file_reference_expandcollapse',
-      };
+    switch (this.type) {
+      case 'file':
+        return {
+          create: 'file_reference_create',
+          details: 'file_reference_details',
+          synchronizelocalize: 'file_reference_synchronizelocalize',
+          expandcollapse: 'file_reference_expandcollapse',
+        };
+      case 'language':
+        return {
+          create: 'site_configuration_inline_create',
+          details: 'site_configuration_inline_details',
+          synchronizelocalize: null,
+          expandcollapse: null,
+        };
+      default:
+        return {
+          create: 'record_inline_create',
+          details: 'record_inline_details',
+          synchronizelocalize: 'record_inline_synchronizelocalize',
+          expandcollapse: 'record_inline_expandcollapse',
+        };
     }
-    return {
-      create: 'record_inline_create',
-      details: 'record_inline_details',
-      synchronizelocalize: 'record_inline_synchronizelocalize',
-      expandcollapse: 'record_inline_expandcollapse',
-    };
   }
 
   private static getValuesFromHashMap(hashmap: UniqueDefinitionCollection): Array<any> {
@@ -269,6 +283,7 @@ class InlineControlContainer extends HTMLElement {
     this.registerToggle();
 
     this.registerCreateRecordBySelector();
+    this.registerCreateRecordByPresetSelector();
     this.registerUniqueSelectFieldChanged();
 
     new RegularEvent('message', this.handlePostMessage).bindTo(window);
@@ -332,6 +347,22 @@ class InlineControlContainer extends HTMLElement {
 
       this.importRecord([this.objectGroup, recordUid]);
     }).delegateTo(this, Selectors.createNewRecordBySelectorSelector);
+  }
+
+  private registerCreateRecordByPresetSelector(): void {
+    new RegularEvent('change', (e: Event): void => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      const selector = this.querySelector(Selectors.createNewRecordByPresetSelector) as HTMLSelectElement;
+      const presetValue = selector?.value;
+      if (presetValue === '') {
+        return;
+      }
+
+      selector.value = '';
+      this.importRecord([this.objectGroup, '', presetValue]);
+    }).delegateTo(this, Selectors.createNewRecordByPresetSelector);
   }
 
   /**
@@ -506,6 +537,11 @@ class InlineControlContainer extends HTMLElement {
       e.preventDefault();
       e.stopImmediatePropagation();
 
+      if (this.endpoints.synchronizelocalize === null) {
+        console.error(`Synchronize/localize is not supported for type "${this.type}"`);
+        return;
+      }
+
       this.ajaxDispatcher.send(
         this.ajaxDispatcher.newRequest(this.ajaxDispatcher.getEndpoint(this.endpoints.synchronizelocalize)),
         [this.objectGroup, targetElement.dataset.type],
@@ -628,6 +664,10 @@ class InlineControlContainer extends HTMLElement {
     }
 
     this.toggleElement(objectId);
+
+    if (this.endpoints.expandcollapse === null) {
+      return;
+    }
 
     if (this.isNewRecord(objectId)) {
       this.updateExpandedCollapsedStateLocally(objectId, isCollapsed);

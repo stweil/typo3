@@ -20,7 +20,7 @@ test('Edit existing site configuration', async ({ backend, page }) => {
     await backend.contentFrame.getByRole('tab', { name: 'Languages' }).click();
 
     await test.step('Update default language fields', async () => {
-      const defaultLanguageElement = backend.contentFrame.locator('typo3-formengine-container-sitelanguage > div > div.panel-group > div').first();
+      const defaultLanguageElement = backend.contentFrame.locator('typo3-formengine-container-inline > div.panel-group > div').first();
       await expect(defaultLanguageElement).toContainText(/English\s.*\[0]\s\(en_US\.UTF-8\)/);
 
       await defaultLanguageElement.locator('.form-irre-header').click();
@@ -38,7 +38,7 @@ test('Edit existing site configuration', async ({ backend, page }) => {
       const languageCount = await getLanguageCount(backend);
       step.skip(languageCount === 1, 'No additional language to delete');
 
-      const nonDefaultLanguageElement = backend.contentFrame.locator('typo3-formengine-container-sitelanguage > div > div.panel-group > div').nth(1);
+      const nonDefaultLanguageElement = backend.contentFrame.locator('typo3-formengine-container-inline > div.panel-group > div').nth(1);
       await expect(nonDefaultLanguageElement).toBeVisible();
       const deleteButton = nonDefaultLanguageElement.getByRole('button', { name: 'Delete' });
       await backend.modal.open(deleteButton);
@@ -58,7 +58,7 @@ test('Edit existing site configuration', async ({ backend, page }) => {
       const languageCount = await getLanguageCount(backend);
 
       await backend.contentFrame.getByRole('button', { name: 'Create new language' }).click();
-      const lastLanguageElement = backend.contentFrame.locator('typo3-formengine-container-sitelanguage > div > div.panel-group > div').last();
+      const lastLanguageElement = backend.contentFrame.locator('typo3-formengine-container-inline > div.panel-group > div').last();
       await expect(lastLanguageElement).toContainText('New language');
       await lastLanguageElement.getByText('[title]').fill('New Language');
       await lastLanguageElement.getByText('[base]').fill('/new-language/');
@@ -80,5 +80,5 @@ test('Edit existing site configuration', async ({ backend, page }) => {
 });
 
 async function getLanguageCount(backend: BackendPage): Promise<number> {
-  return backend.contentFrame.locator('typo3-formengine-container-sitelanguage > div > div.panel-group > div').count();
+  return backend.contentFrame.locator('typo3-formengine-container-inline > div.panel-group > div').count();
 }
