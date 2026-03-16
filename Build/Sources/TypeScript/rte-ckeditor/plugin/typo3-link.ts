@@ -12,7 +12,7 @@ import type { GeneralHtmlSupport, DataFilter } from '@ckeditor/ckeditor5-html-su
 import type { GHSViewAttributes } from '@ckeditor/ckeditor5-html-support/src/utils';
 import { IconLink, IconPencil, IconUnlink } from '@ckeditor/ckeditor5-icons';
 
-export const LINK_ALLOWED_ATTRIBUTES = ['href', 'title', 'class', 'target', 'rel'];
+export const LINK_ALLOWED_ATTRIBUTES = ['href', 'title', 'class', 'target', 'rel', 'download'];
 
 export function addLinkPrefix(attribute: string): string {
   const capitalizedAttribute = attribute.charAt(0).toUpperCase() + attribute.slice(1);
@@ -36,6 +36,7 @@ export interface Typo3LinkDict {
     linkClass?: string;
     linkTarget?: string;
     linkRel?: string;
+    linkDownload?: string;
   };
   linkText?: string;
 }
@@ -253,6 +254,7 @@ export class Typo3UnlinkCommand extends Core.Command {
         writer.removeAttribute('linkTarget', range);
         writer.removeAttribute('linkTitle', range);
         writer.removeAttribute('linkRel', range);
+        writer.removeAttribute('linkDownload', range);
         writer.removeAttribute('linkDataRteError', range);
       }
     });
@@ -267,7 +269,7 @@ export class Typo3LinkEditing extends Core.Plugin {
     // @todo: Why is this needed? Remove.
     (window as any).editor = editor;
 
-    editor.model.schema.extend('$text', { allowAttributes: ['linkTitle', 'linkTarget', 'linkRel', 'linkDataRteError'] });
+    editor.model.schema.extend('$text', { allowAttributes: ['linkTitle', 'linkTarget', 'linkRel', 'linkDownload', 'linkDataRteError'] });
 
     const ghsDataFilter: DataFilter = editor.plugins.get('DataFilter');
     ghsDataFilter.loadAllowedConfig([{ name: 'a', classes: true }]);
@@ -329,6 +331,25 @@ export class Typo3LinkEditing extends Core.Plugin {
     editor.conversion.for('upcast').elementToAttribute({
       view: { name: 'a', attributes: { rel: true } },
       model: { key: 'linkRel', value: (viewElement: ViewElement) => viewElement.getAttribute('rel') }
+    });
+    // linkDownload <=> download
+    editor.conversion.for('downcast').attributeToElement({
+      model: 'linkDownload',
+      view: (value, { writer }) => {
+        const linkElement = writer.createAttributeElement('a', { download: value === 'true' ? '' : value }, { priority: 5 });
+        writer.setCustomProperty('linkDownload', true, linkElement);
+        return linkElement;
+      }
+    });
+    editor.conversion.for('upcast').elementToAttribute({
+      view: { name: 'a', attributes: { download: true } },
+      model: {
+        key: 'linkDownload',
+        value: (viewElement: ViewElement) => {
+          const val = viewElement.getAttribute('download');
+          return val === '' ? 'true' : val;
+        }
+      }
     });
 
     // overrides 'link' command, 'unlink' command is taken from CKEditor 5's `LinkEditing`

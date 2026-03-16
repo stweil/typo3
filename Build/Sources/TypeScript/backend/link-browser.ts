@@ -13,6 +13,7 @@
 
 import RegularEvent from '@typo3/core/event/regular-event';
 import '@typo3/backend/element/combobox-element';
+import '@typo3/backend/element/link-browser-download-element';
 
 export interface LinkAttributes {
   [s: string]: any;
