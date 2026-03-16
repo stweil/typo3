@@ -119,86 +119,6 @@ class InlineControlContainer extends HTMLElement {
     return parseInt(this.dataset.max, 10) || 0;
   }
 
-  /**
-   * @param {string} objectId
-   * @return HTMLDivElement
-   */
-  private static getInlineRecordContainer(objectId: string): HTMLDivElement {
-    return <HTMLDivElement>document.querySelector(selector`[data-object-id="${objectId}"]`);
-  }
-
-  /**
-   * @param {string} objectId
-   * @return HTMLButtonElement
-   */
-  private static getCollapseButton(objectId: string): HTMLButtonElement {
-    return <HTMLButtonElement>document.querySelector(selector`[aria-controls="${objectId}_fields"]`);
-  }
-
-  /**
-   * @param {string} objectId
-   */
-  private static toggleElement(objectId: string): void {
-    const recordContainer = InlineControlContainer.getInlineRecordContainer(objectId);
-    if (recordContainer.classList.contains(States.collapsed)) {
-      InlineControlContainer.expandElement(recordContainer, objectId);
-    } else {
-      InlineControlContainer.collapseElement(recordContainer, objectId);
-    }
-  }
-
-  /**
-   * @param {HTMLDivElement} recordContainer
-   * @param {string} objectId
-   */
-  private static collapseElement(recordContainer: HTMLDivElement, objectId: string): void {
-    const collapseButton = InlineControlContainer.getCollapseButton(objectId);
-    recordContainer.classList.remove(States.visible);
-    recordContainer.classList.add(States.collapsed);
-    collapseButton.setAttribute('aria-expanded', 'false');
-  }
-
-  /**
-   * @param {HTMLDivElement} recordContainer
-   * @param {string} objectId
-   */
-  private static expandElement(recordContainer: HTMLDivElement, objectId: string): void {
-    const collapseButton = InlineControlContainer.getCollapseButton(objectId);
-    recordContainer.classList.remove(States.collapsed);
-    recordContainer.classList.add(States.visible);
-    collapseButton.setAttribute('aria-expanded', 'true');
-  }
-
-  /**
-   * @param {string} objectId
-   * @return boolean
-   */
-  private static isNewRecord(objectId: string): boolean {
-    const recordContainer = InlineControlContainer.getInlineRecordContainer(objectId);
-    return recordContainer.classList.contains(States.new);
-  }
-
-  /**
-   * @param {string} objectId
-   * @param {boolean} value
-   */
-  private static updateExpandedCollapsedStateLocally(objectId: string, value: boolean): void {
-    const recordContainer = InlineControlContainer.getInlineRecordContainer(objectId);
-
-    const ucName = 'uc[inlineView]'
-      + '[' + recordContainer.dataset.topmostParentTable + ']'
-      + '[' + recordContainer.dataset.topmostParentUid + ']'
-      + recordContainer.dataset.fieldName;
-    const ucFormObj = document.getElementsByName(ucName);
-
-    if (ucFormObj.length) {
-      (<HTMLInputElement>ucFormObj[0]).value = value ? '1' : '0';
-    }
-  }
-
-  /**
-   * @param {UniqueDefinitionCollection} hashmap
-   */
   private static getValuesFromHashMap(hashmap: UniqueDefinitionCollection): Array<any> {
     return Object.keys(hashmap).map((key: string) => hashmap[key]);
   }
@@ -207,10 +127,6 @@ class InlineControlContainer extends HTMLElement {
     return selectElement.querySelector(selector`option[value="${value}"]`) !== null;
   }
 
-  /**
-   * @param {HTMLSelectElement} selectElement
-   * @param {string} value
-   */
   private static removeSelectOptionByValue(selectElement: HTMLSelectElement, value: string): void {
     const option = selectElement.querySelector(selector`option[value="${value}"]`);
     if (option !== null) {
@@ -218,11 +134,6 @@ class InlineControlContainer extends HTMLElement {
     }
   }
 
-  /**
-   * @param {HTMLSelectElement} selectElement
-   * @param {string} value
-   * @param {UniqueDefinition} unique
-   */
   private static reAddSelectOption(selectElement: HTMLSelectElement, value: string, unique: UniqueDefinition): void {
     if (InlineControlContainer.selectOptionValueExists(selectElement, value)) {
       return;
@@ -263,6 +174,59 @@ class InlineControlContainer extends HTMLElement {
     this.registerEvents();
   }
 
+  private getRecordContainer(objectId: string): HTMLDivElement {
+    return <HTMLDivElement>this.querySelector(selector`[data-object-id="${objectId}"]`);
+  }
+
+  private getCollapseButton(objectId: string): HTMLButtonElement {
+    return <HTMLButtonElement>this.querySelector(selector`[aria-controls="${objectId}_fields"]`);
+  }
+
+  private toggleElement(objectId: string): void {
+    const recordContainer = this.getRecordContainer(objectId);
+    if (recordContainer.classList.contains(States.collapsed)) {
+      this.expandElement(recordContainer, objectId);
+    } else {
+      this.collapseElement(recordContainer, objectId);
+    }
+  }
+
+  private collapseElement(recordContainer: HTMLDivElement, objectId: string): void {
+    const collapseButton = this.getCollapseButton(objectId);
+    recordContainer.classList.remove(States.visible);
+    recordContainer.classList.add(States.collapsed);
+    collapseButton.setAttribute('aria-expanded', 'false');
+  }
+
+  private expandElement(recordContainer: HTMLDivElement, objectId: string): void {
+    const collapseButton = this.getCollapseButton(objectId);
+    recordContainer.classList.remove(States.collapsed);
+    recordContainer.classList.add(States.visible);
+    collapseButton.setAttribute('aria-expanded', 'true');
+  }
+
+  private isNewRecord(objectId: string): boolean {
+    const recordContainer = this.getRecordContainer(objectId);
+    return recordContainer.classList.contains(States.new);
+  }
+
+  private updateExpandedCollapsedStateLocally(objectId: string, value: boolean): void {
+    const recordContainer = this.getRecordContainer(objectId);
+
+    const ucFormObj = this.querySelectorAll(
+      '[name="'
+      + 'uc[inlineView]'
+      + '[' + recordContainer.dataset.topmostParentTable + ']'
+      + '[' + recordContainer.dataset.topmostParentUid + ']'
+      + recordContainer.dataset.fieldName
+      + '"]'
+    );
+
+    if (ucFormObj.length) {
+      (<HTMLInputElement>ucFormObj[0]).value = value ? '1' : '0';
+    }
+  }
+
   private async registerEvents(): Promise<void> {
     await DocumentService.ready();
     this.registerInfoButton();
@@ -280,7 +244,7 @@ class InlineControlContainer extends HTMLElement {
     new RegularEvent('message', this.handlePostMessage).bindTo(window);
 
     if (this.sortable) {
-      const recordListContainer = <HTMLDivElement>document.getElementById(this.id + '_records');
+      const recordListContainer = <HTMLDivElement>this.querySelector(selector`[id="${this.id}_records"]`);
       new Sortable(recordListContainer, {
         group: recordListContainer.getAttribute('id'),
         handle: '.sortableHandle',
@@ -401,10 +365,10 @@ class InlineControlContainer extends HTMLElement {
     }
 
     if (afterUid !== null) {
-      InlineControlContainer.getInlineRecordContainer(objectId).insertAdjacentHTML('afterend', markup);
+      this.getRecordContainer(objectId).insertAdjacentHTML('afterend', markup);
       this.memorizeAddRecord(uid, afterUid, selectedValue);
     } else {
-      document.getElementById(this.id + '_records').insertAdjacentHTML('beforeend', markup);
+      this.querySelector(selector`[id="${this.id}_records"]`).insertAdjacentHTML('beforeend', markup);
       this.memorizeAddRecord(uid, null, selectedValue);
     }
   }
@@ -435,10 +399,10 @@ class InlineControlContainer extends HTMLElement {
       e.stopImmediatePropagation();
 
       const objectId = (<HTMLDivElement>target.closest('[data-object-id]')).dataset.objectId;
-      const recordContainer = InlineControlContainer.getInlineRecordContainer(objectId);
+      const recordContainer = this.getRecordContainer(objectId);
       const hiddenFieldName = selector`data${recordContainer.dataset.fieldName}[${target.dataset.hiddenField}]`;
-      const hiddenValueCheckBox = <HTMLInputElement>document.querySelector('[data-formengine-input-name="' + hiddenFieldName + '"');
-      const hiddenValueInput = <HTMLInputElement>document.querySelector('[name="' + hiddenFieldName + '"');
+      const hiddenValueCheckBox = <HTMLInputElement>this.querySelector('[data-formengine-input-name="' + hiddenFieldName + '"');
+      const hiddenValueInput = <HTMLInputElement>this.querySelector('[name="' + hiddenFieldName + '"');
 
       if (hiddenValueCheckBox !== null && hiddenValueInput !== null) {
         hiddenValueCheckBox.checked = !hiddenValueCheckBox.checked;
@@ -516,7 +480,7 @@ class InlineControlContainer extends HTMLElement {
         this.ajaxDispatcher.newRequest(this.ajaxDispatcher.getEndpoint('record_inline_synchronizelocalize')),
         [this.objectGroup, targetElement.dataset.type],
       ).then(async (response: InlineResponseInterface): Promise<void> => {
-        document.getElementById(this.id + '_records').insertAdjacentHTML('beforeend', response.data);
+        this.querySelector(selector`[id="${this.id}_records"]`).insertAdjacentHTML('beforeend', response.data);
 
         const objectIdPrefix = this.objectGroup + Separators.structureSeparator;
         for (const itemUid of response.compilerInput.delete) {
@@ -525,7 +489,7 @@ class InlineControlContainer extends HTMLElement {
 
         for (const item of Object.values(response.compilerInput.localize)) {
           if (typeof item.remove !== 'undefined') {
-            const removableRecordContainer = InlineControlContainer.getInlineRecordContainer(objectIdPrefix + item.remove);
+            const removableRecordContainer = this.getRecordContainer(objectIdPrefix + item.remove);
             removableRecordContainer.parentElement.removeChild(removableRecordContainer);
           }
 
@@ -568,8 +532,8 @@ class InlineControlContainer extends HTMLElement {
    * @param {string} objectId
    */
   private loadRecordDetails(objectId: string): void {
-    const recordFieldsContainer = document.getElementById(objectId + '_fields');
-    const recordContainer = InlineControlContainer.getInlineRecordContainer(objectId);
+    const recordFieldsContainer = this.querySelector(selector`[id="${objectId}_fields"]`);
+    const recordContainer = this.getRecordContainer(objectId);
     const isLoading = typeof this.requestQueue[objectId] !== 'undefined';
     const isLoaded = recordFieldsContainer !== null && !recordContainer.classList.contains(States.notLoaded);
 
@@ -595,7 +559,7 @@ class InlineControlContainer extends HTMLElement {
           FormEngineValidation.validate(this);
 
           if (this.hasObjectGroupDefinedUniqueConstraints()) {
-            const recordContainer = InlineControlContainer.getInlineRecordContainer(objectId);
+            const recordContainer = this.getRecordContainer(objectId);
             this.removeUsed(recordContainer);
           }
         });
@@ -623,7 +587,7 @@ class InlineControlContainer extends HTMLElement {
    * @param {String} objectId
    */
   private collapseExpandRecord(objectId: string): void {
-    const recordElement = InlineControlContainer.getInlineRecordContainer(objectId);
+    const recordElement = this.getRecordContainer(objectId);
     const expandSingle = this.expandSingle;
     const isCollapsed: boolean = recordElement.classList.contains(States.collapsed);
     let collapse: Array<string> = [];
@@ -633,10 +597,10 @@ class InlineControlContainer extends HTMLElement {
       collapse = this.collapseAllRecords(recordElement.dataset.objectUid);
     }
 
-    InlineControlContainer.toggleElement(objectId);
+    this.toggleElement(objectId);
 
-    if (InlineControlContainer.isNewRecord(objectId)) {
-      InlineControlContainer.updateExpandedCollapsedStateLocally(objectId, isCollapsed);
+    if (this.isNewRecord(objectId)) {
+      this.updateExpandedCollapsedStateLocally(objectId, isCollapsed);
     } else if (isCollapsed) {
       expand.push(recordElement.dataset.objectUid);
     } else if (!isCollapsed) {
@@ -722,9 +686,9 @@ class InlineControlContainer extends HTMLElement {
    * @param {SortDirections} direction
    */
   private changeSortingByButton(objectId: string, direction: SortDirections): void {
-    const currentRecordContainer = InlineControlContainer.getInlineRecordContainer(objectId);
+    const currentRecordContainer = this.getRecordContainer(objectId);
     const recordUid = currentRecordContainer.dataset.objectUid;
-    const recordListContainer = <HTMLDivElement>document.getElementById(this.id + '_records');
+    const recordListContainer = <HTMLDivElement>this.querySelector(selector`[id="${this.id}_records"]`);
     const records = Array.from(recordListContainer.children).map((child: HTMLElement) => child.dataset.objectUid);
     const position = records.indexOf(recordUid);
     let isChanged = false;
@@ -743,8 +707,8 @@ class InlineControlContainer extends HTMLElement {
       const objectIdPrefix = this.objectGroup + Separators.structureSeparator;
       const adjustment = direction === SortDirections.UP ? 1 : 0;
       currentRecordContainer.parentElement.insertBefore(
-        InlineControlContainer.getInlineRecordContainer(objectIdPrefix + records[position - adjustment]),
-        InlineControlContainer.getInlineRecordContainer(objectIdPrefix + records[position + 1 - adjustment]),
+        this.getRecordContainer(objectIdPrefix + records[position - adjustment]),
+        this.getRecordContainer(objectIdPrefix + records[position + 1 - adjustment]),
       );
 
       this.updateSorting();
@@ -757,7 +721,7 @@ class InlineControlContainer extends HTMLElement {
       return;
     }
 
-    const recordListContainer = <HTMLDivElement>document.getElementById(this.id + '_records');
+    const recordListContainer = <HTMLDivElement>this.querySelector(selector`[id="${this.id}_records"]`);
     const records = Array.from(recordListContainer.querySelectorAll(selector`[data-object-parent-group="${this.objectGroup}"][data-placeholder-record="0"]`))
       .map((child: HTMLElement) => child.dataset.objectUid);
 
@@ -773,12 +737,12 @@ class InlineControlContainer extends HTMLElement {
    * @param {Boolean} forceDirectRemoval
    */
   private deleteRecord(objectId: string, forceDirectRemoval: boolean = false): void {
-    const recordContainer = InlineControlContainer.getInlineRecordContainer(objectId);
+    const recordContainer = this.getRecordContainer(objectId);
     const objectUid = recordContainer.dataset.objectUid;
 
     recordContainer.classList.add('t3js-inline-record-deleted');
 
-    if (!InlineControlContainer.isNewRecord(objectId) && !forceDirectRemoval) {
+    if (!this.isNewRecord(objectId) && !forceDirectRemoval) {
       const deleteCommandInput = this.querySelector(selector`[name="cmd${recordContainer.dataset.fieldName}[delete]"]`);
       deleteCommandInput.removeAttribute('disabled');
 
@@ -808,9 +772,9 @@ class InlineControlContainer extends HTMLElement {
       ':scope > ' + Selectors.controlContainer
     );
     controlContainer.forEach((container: HTMLElement): void => {
-      const controlContainerButtons = container.querySelectorAll('button, a');
-      controlContainerButtons.forEach((button: HTMLElement): void => {
-        button.style.display = visible ? null : 'none';
+      const controlContainerButtons = container.querySelectorAll<HTMLButtonElement | HTMLAnchorElement>('button, a');
+      controlContainerButtons.forEach((button: HTMLButtonElement | HTMLAnchorElement): void => {
+        button.hidden = !visible;
       });
     });
   }
@@ -822,7 +786,7 @@ class InlineControlContainer extends HTMLElement {
       progress = this.progressQueue[objectId];
     } else {
       progress = document.createElement('typo3-backend-progress-bar');
-      const panel = InlineControlContainer.getInlineRecordContainer(objectId);
+      const panel = this.getRecordContainer(objectId);
       panel.insertBefore(progress, panel.firstChild);
       this.progressQueue[objectId] = progress;
     }
@@ -845,12 +809,12 @@ class InlineControlContainer extends HTMLElement {
         }
 
         const recordObjectId = this.objectGroup + Separators.structureSeparator + recordUid;
-        const recordContainer = InlineControlContainer.getInlineRecordContainer(recordObjectId);
+        const recordContainer = this.getRecordContainer(recordObjectId);
         if (recordContainer.classList.contains(States.visible)) {
-          InlineControlContainer.collapseElement(recordContainer, recordObjectId);
+          this.collapseElement(recordContainer, recordObjectId);
 
-          if (InlineControlContainer.isNewRecord(recordObjectId)) {
-            InlineControlContainer.updateExpandedCollapsedStateLocally(recordObjectId, false);
+          if (this.isNewRecord(recordObjectId)) {
+            this.updateExpandedCollapsedStateLocally(recordObjectId, false);
           } else {
             collapse.push(recordUid);
           }
@@ -861,16 +825,8 @@ class InlineControlContainer extends HTMLElement {
     return collapse;
   }
 
-  /**
-   * @return HTMLInputElement | void
-   */
   private getFormFieldForElements(): HTMLInputElement | null {
-    const formFields = document.getElementsByName(this.formField);
-    if (formFields.length > 0) {
-      return <HTMLInputElement>formFields[0];
-    }
-
-    return null;
+    return this.querySelector<HTMLInputElement>(selector`[name="${this.formField}"]`);
   }
 
   /**
@@ -892,9 +848,9 @@ class InlineControlContainer extends HTMLElement {
     }
 
     records.forEach((recordUid: string, index: number): void => {
-      const recordContainer = InlineControlContainer.getInlineRecordContainer(objectId + Separators.structureSeparator + recordUid);
+      const recordContainer = this.getRecordContainer(objectId + Separators.structureSeparator + recordUid);
       const headerIdentifier = recordContainer.dataset.objectIdHash + '_header';
-      const headerElement = document.getElementById(headerIdentifier);
+      const headerElement = this.querySelector(selector`[id="${headerIdentifier}"]`);
       const sortUp = headerElement.querySelector(selector`[data-action="sort"][data-direction="${SortDirections.UP}"]`);
 
       if (sortUp !== null) {
@@ -1014,15 +970,15 @@ class InlineControlContainer extends HTMLElement {
     if (!this.hasObjectGroupDefinedUniqueConstraints()) {
       return;
     }
-    const selectorElement: HTMLSelectElement = <HTMLSelectElement>document.getElementById(
-      this.objectGroup + '_selector',
+    const selectorElement = <HTMLSelectElement>this.querySelector(
+      selector`[id="${this.objectGroup}_selector"]`,
     );
     const unique: UniqueDefinition = TYPO3.settings.FormEngineInline.unique[this.objectGroup];
     if (unique.type === 'select') {
       if (!(unique.selector && unique.max === -1)) {
         const formField = this.getFormFieldForElements();
         const recordObjectId = this.objectGroup + Separators.structureSeparator + recordUid;
-        const recordContainer = InlineControlContainer.getInlineRecordContainer(recordObjectId);
+        const recordContainer = this.getRecordContainer(recordObjectId);
         let uniqueValueField = <HTMLSelectElement>recordContainer.querySelector(
           '[name="data[' + unique.table + '][' + recordUid + '][' + unique.field + ']"]',
         );
@@ -1056,7 +1012,7 @@ class InlineControlContainer extends HTMLElement {
         if (formField !== null && InlineControlContainer.selectOptionValueExists(selectorElement, selectedValue)) {
           const records = Utility.trimExplode(',', (<HTMLInputElement>formField).value);
           for (const record of records) {
-            uniqueValueField = <HTMLSelectElement>document.querySelector(
+            uniqueValueField = <HTMLSelectElement>this.querySelector(
               '[name="data[' + unique.table + '][' + record + '][' + unique.field + ']"]',
             );
             if (uniqueValueField !== null && record !== recordUid) {
@@ -1096,8 +1052,8 @@ class InlineControlContainer extends HTMLElement {
     const oldValue = unique.used[recordUid];
 
     if (unique.selector === 'select') {
-      const selectorElement: HTMLSelectElement = <HTMLSelectElement>document.getElementById(
-        this.objectGroup + '_selector',
+      const selectorElement = <HTMLSelectElement>this.querySelector(
+        selector`[id="${this.objectGroup}_selector"]`,
       );
       InlineControlContainer.removeSelectOptionByValue(selectorElement, srcElement.value);
       if (typeof oldValue !== 'undefined') {
@@ -1116,7 +1072,7 @@ class InlineControlContainer extends HTMLElement {
     const records = Utility.trimExplode(',', formField.value);
     let uniqueValueField;
     for (const record of records) {
-      uniqueValueField = <HTMLSelectElement>document.querySelector(
+      uniqueValueField = <HTMLSelectElement>this.querySelector(
         '[name="data[' + unique.table + '][' + record + '][' + unique.field + ']"]',
       );
       if (uniqueValueField !== null && uniqueValueField !== srcElement) {
@@ -1139,7 +1095,7 @@ class InlineControlContainer extends HTMLElement {
 
     const unique = TYPO3.settings.FormEngineInline.unique[this.objectGroup];
     const recordObjectId = this.objectGroup + Separators.structureSeparator + recordUid;
-    const recordContainer = InlineControlContainer.getInlineRecordContainer(recordObjectId);
+    const recordContainer = this.getRecordContainer(recordObjectId);
 
     const uniqueValueField = <HTMLSelectElement>recordContainer.querySelector(
       '[name="data[' + unique.table + '][' + recordContainer.dataset.objectUid + '][' + unique.field + ']"]',
@@ -1156,8 +1112,8 @@ class InlineControlContainer extends HTMLElement {
 
       if (unique.selector === 'select') {
         if (!isNaN(parseInt(uniqueValue, 10))) {
-          const selectorElement: HTMLSelectElement = <HTMLSelectElement>document.getElementById(
-            this.objectGroup + '_selector',
+          const selectorElement = <HTMLSelectElement>this.querySelector(
+            selector`[id="${this.objectGroup}_selector"]`,
           );
           InlineControlContainer.reAddSelectOption(selectorElement, uniqueValue, unique);
         }
@@ -1176,7 +1132,7 @@ class InlineControlContainer extends HTMLElement {
       let recordObj;
       // walk through all inline records on that level and get the select field
       for (let i = 0; i < records.length; i++) {
-        recordObj = <HTMLSelectElement>document.querySelector(
+        recordObj = <HTMLSelectElement>this.querySelector(
           '[name="data[' + unique.table + '][' + records[i] + '][' + unique.field + ']"]',
         );
         if (recordObj !== null) {
@@ -1209,7 +1165,7 @@ class InlineControlContainer extends HTMLElement {
     } else {
       value = formField.value;
     }
-    document.getElementById(objectId + '_label').textContent = value.length ? value : this.noTitleString;
+    this.querySelector(selector`[id="${objectId}_label"]`).textContent = value.length ? value : this.noTitleString;
   }
 
 }
