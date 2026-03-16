@@ -18,7 +18,7 @@ To create a new reaction navigate to the :guilabel:`Administration > Integration
 module. If you call it the first time you will see the invitation to create a
 new reaction:
 
-..  figure:: /Images/BackendModuleEmpty.png
+..  figure:: /Images/BackendModuleEmpty.avif
     :alt: Backend module "Reactions" with no reactions available
     :class: with-shadow
 
@@ -31,7 +31,7 @@ Create a new reaction
 
 Click on the button :guilabel:`Create new reaction` to add a new reaction.
 
-..  figure:: /Images/CreateDatabaseRecordConfiguration.png
+..  figure:: /Images/CreateDatabaseRecordConfiguration.avif
     :alt: Backend form to create a new database record
     :class: with-shadow
 
@@ -97,7 +97,7 @@ following fields:
 
 We now save and close the form - our newly created reaction is now visible:
 
-..  figure:: /Images/BackendModuleWithRecord.png
+..  figure:: /Images/BackendModuleWithRecord.avif
     :alt: Backend module with reaction
     :class: with-shadow
 
