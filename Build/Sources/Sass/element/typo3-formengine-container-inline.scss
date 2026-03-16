@@ -1,0 +1,10 @@
+//
+// CSS for custom element:
+// typo3-formengine-container-inline
+//
+typo3-formengine-container-inline {
+    > :last-child,
+    > :has(+ input[type="hidden"]:last-child) {
+        margin-bottom: 0;
+    }
+}

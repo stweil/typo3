@@ -23,7 +23,7 @@ test('Edit existing site configuration', async ({ backend, page }) => {
       const defaultLanguageElement = backend.contentFrame.locator('typo3-formengine-container-inline > div.panel-group > div').first();
       await expect(defaultLanguageElement).toContainText(/English\s.*\[0]\s\(en_US\.UTF-8\)/);
 
-      await defaultLanguageElement.locator('.form-irre-header').click();
+      await defaultLanguageElement.locator('.panel-button').click();
       await defaultLanguageElement.getByText('[title]').fill('English Edit');
       await defaultLanguageElement.getByText('[base]').fill('/');
       await defaultLanguageElement.getByText('[locale]').fill('en_US.UTF-8');

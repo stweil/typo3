@@ -12,6 +12,7 @@
  */
 
 import { MessageUtility } from '../../utility/message-utility';
+import { Collapse } from 'bootstrap';
 import { AjaxDispatcher } from './../inline-relation/ajax-dispatcher';
 import DocumentService from '@typo3/core/document-service';
 import { ProgressBarElement } from '@typo3/backend/element/progress-bar-element';
@@ -32,7 +33,6 @@ import backendAltDocLabels from '~labels/backend.alt_doc';
 import coreCoreLabels from '~labels/core.core';
 
 enum Selectors {
-  toggleSelector = '[data-bs-toggle="formengine-inline"]',
   controlSectionSelector = '.t3js-formengine-irre-control',
   createNewRecordButtonSelector = '.t3js-create-new-button',
   createNewRecordBySelectorSelector = '.t3js-create-new-selector',
@@ -48,8 +48,6 @@ enum Selectors {
 
 enum States {
   new = 'inlineIsNewRecord',
-  visible = 'panel-visible',
-  collapsed = 'panel-collapsed',
   notLoaded = 't3js-not-loaded',
 }
 
@@ -222,32 +220,14 @@ class InlineControlContainer extends HTMLElement {
     return <HTMLDivElement>this.querySelector(selector`[data-object-id="${objectId}"]`);
   }
 
-  private getCollapseButton(objectId: string): HTMLButtonElement {
-    return <HTMLButtonElement>this.querySelector(selector`[aria-controls="${objectId}_fields"]`);
+  private getCollapseContent(objectId: string): HTMLDivElement {
+    return <HTMLDivElement>this.querySelector(selector`[id="${objectId}_fields"]`);
   }
 
-  private toggleElement(objectId: string): void {
-    const recordContainer = this.getRecordContainer(objectId);
-    if (recordContainer.classList.contains(States.collapsed)) {
-      this.expandElement(recordContainer, objectId);
-    } else {
-      this.collapseElement(recordContainer, objectId);
-    }
+  private collapseElement(objectId: string): void {
+    Collapse.getOrCreateInstance(this.getCollapseContent(objectId)).hide();
   }
 
-  private collapseElement(recordContainer: HTMLDivElement, objectId: string): void {
-    const collapseButton = this.getCollapseButton(objectId);
-    recordContainer.classList.remove(States.visible);
-    recordContainer.classList.add(States.collapsed);
-    collapseButton.setAttribute('aria-expanded', 'false');
-  }
-
-  private expandElement(recordContainer: HTMLDivElement, objectId: string): void {
-    const collapseButton = this.getCollapseButton(objectId);
-    recordContainer.classList.remove(States.collapsed);
-    recordContainer.classList.add(States.visible);
-    collapseButton.setAttribute('aria-expanded', 'true');
-  }
 
   private isNewRecord(objectId: string): boolean {
     const recordContainer = this.getRecordContainer(objectId);
@@ -301,12 +281,42 @@ class InlineControlContainer extends HTMLElement {
   }
 
   private registerToggle(): void {
-    new RegularEvent('click', (e: Event, targetElement: HTMLElement): void => {
-      e.preventDefault();
-      e.stopImmediatePropagation();
+    new RegularEvent('show.bs.collapse', (e: Event): void => {
+      const panelCollapse = e.target as HTMLDivElement;
+      const recordContainer = panelCollapse.parentElement as HTMLDivElement;
+      if (recordContainer.closest('typo3-formengine-container-inline') !== this) {
+        return;
+      }
+      const objectId = recordContainer.dataset.objectId;
 
-      this.loadRecordDetails(targetElement.closest(Selectors.toggleSelector).parentElement.dataset.objectId);
-    }).delegateTo(this, `${Selectors.toggleSelector} .form-irre-header-cell:not(${Selectors.controlSectionSelector}`);
+      if (recordContainer.classList.contains(States.notLoaded)) {
+        e.preventDefault();
+        this.loadRecordDetails(objectId);
+        return;
+      }
+
+      if (this.expandSingle) {
+        this.collapseAllRecords(recordContainer.dataset.objectUid);
+      }
+    }).bindTo(this);
+
+    new RegularEvent('shown.bs.collapse', (e: Event): void => {
+      const panelCollapse = e.target as HTMLDivElement;
+      const recordContainer = panelCollapse.parentElement as HTMLDivElement;
+      if (recordContainer.closest('typo3-formengine-container-inline') !== this) {
+        return;
+      }
+      this.persistExpandCollapseState(recordContainer.dataset.objectId, true);
+    }).bindTo(this);
+
+    new RegularEvent('hidden.bs.collapse', (e: Event): void => {
+      const panelCollapse = e.target as HTMLDivElement;
+      const recordContainer = panelCollapse.parentElement as HTMLDivElement;
+      if (recordContainer.closest('typo3-formengine-container-inline') !== this) {
+        return;
+      }
+      this.persistExpandCollapseState(recordContainer.dataset.objectId, false);
+    }).bindTo(this);
   }
 
   private registerSort(): void {
@@ -595,91 +605,76 @@ class InlineControlContainer extends HTMLElement {
   }
 
   /**
-   * @param {string} objectId
+   * Loads record details via AJAX for a not-yet-loaded record, then expands it.
    */
   private loadRecordDetails(objectId: string): void {
-    const recordFieldsContainer = this.querySelector(selector`[id="${objectId}_fields"]`);
+    const recordFieldsContainer = this.getCollapseContent(objectId);
     const recordContainer = this.getRecordContainer(objectId);
     const isLoading = typeof this.requestQueue[objectId] !== 'undefined';
-    const isLoaded = recordFieldsContainer !== null && !recordContainer.classList.contains(States.notLoaded);
 
-    if (!isLoaded) {
-      const progress = this.getProgress(objectId);
+    const progress = this.getProgress(objectId);
 
-      if (!isLoading) {
-        const ajaxRequest = this.ajaxDispatcher.newRequest(this.ajaxDispatcher.getEndpoint(this.endpoints.details));
-        const request = this.ajaxDispatcher.send(ajaxRequest, [objectId]);
+    if (!isLoading) {
+      const ajaxRequest = this.ajaxDispatcher.newRequest(this.ajaxDispatcher.getEndpoint(this.endpoints.details));
+      const request = this.ajaxDispatcher.send(ajaxRequest, [objectId]);
 
-        request.then(async (response: InlineResponseInterface): Promise<void> => {
-          delete this.requestQueue[objectId];
-          delete this.progressQueue[objectId];
-
-          recordContainer.classList.remove(States.notLoaded);
-          recordFieldsContainer.innerHTML = response.data;
-          this.collapseExpandRecord(objectId);
-
-          progress.done();
-
-          FormEngine.reinitialize();
-          FormEngineValidation.initializeInputFields();
-          FormEngineValidation.validate(this);
-
-          if (this.hasObjectGroupDefinedUniqueConstraints()) {
-            const recordContainer = this.getRecordContainer(objectId);
-            this.removeUsed(recordContainer);
-          }
-        });
-
-        this.requestQueue[objectId] = ajaxRequest;
-        progress.start();
-      } else {
-        // Abort loading if collapsed again
-        this.requestQueue[objectId].abort();
+      request.then(async (response: InlineResponseInterface): Promise<void> => {
         delete this.requestQueue[objectId];
         delete this.progressQueue[objectId];
+
+        recordContainer.classList.remove(States.notLoaded);
+        recordFieldsContainer.innerHTML = response.data;
+
         progress.done();
-      }
 
-      return;
+        // Now that content is loaded, trigger expand via Bootstrap Collapse
+        if (this.expandSingle) {
+          this.collapseAllRecords(recordContainer.dataset.objectUid);
+        }
+        Collapse.getOrCreateInstance(recordFieldsContainer).show();
+
+        FormEngine.reinitialize();
+        FormEngineValidation.initializeInputFields();
+        FormEngineValidation.validate(this);
+
+        if (this.hasObjectGroupDefinedUniqueConstraints()) {
+          const recordContainer = this.getRecordContainer(objectId);
+          this.removeUsed(recordContainer);
+        }
+      });
+
+      this.requestQueue[objectId] = ajaxRequest;
+      progress.start();
+    } else {
+      // Abort loading if collapsed again
+      this.requestQueue[objectId].abort();
+      delete this.requestQueue[objectId];
+      delete this.progressQueue[objectId];
+      progress.done();
     }
-
-    this.collapseExpandRecord(objectId);
   }
 
   /**
-   * Collapses or expands a record and stores the state either in a form field or directly in backend user's UC, depending
-   * on whether the record is new or already existing.
-   *
-   * @param {String} objectId
+   * Persists the expand/collapse state for a record, either locally (for new records)
+   * or via AJAX to the backend user's UC.
    */
-  private collapseExpandRecord(objectId: string): void {
-    const recordElement = this.getRecordContainer(objectId);
-    const expandSingle = this.expandSingle;
-    const isCollapsed: boolean = recordElement.classList.contains(States.collapsed);
-    let collapse: Array<string> = [];
-    const expand: Array<string> = [];
-
-    if (expandSingle && isCollapsed) {
-      collapse = this.collapseAllRecords(recordElement.dataset.objectUid);
-    }
-
-    this.toggleElement(objectId);
-
+  private persistExpandCollapseState(objectId: string, isExpanded: boolean): void {
     if (this.endpoints.expandcollapse === null) {
       return;
     }
 
     if (this.isNewRecord(objectId)) {
-      this.updateExpandedCollapsedStateLocally(objectId, isCollapsed);
-    } else if (isCollapsed) {
-      expand.push(recordElement.dataset.objectUid);
-    } else if (!isCollapsed) {
-      collapse.push(recordElement.dataset.objectUid);
+      this.updateExpandedCollapsedStateLocally(objectId, isExpanded);
+      return;
     }
+
+    const recordElement = this.getRecordContainer(objectId);
+    const expand = isExpanded ? recordElement.dataset.objectUid : '';
+    const collapse = isExpanded ? '' : recordElement.dataset.objectUid;
 
     this.ajaxDispatcher.send(
       this.ajaxDispatcher.newRequest(this.ajaxDispatcher.getEndpoint(this.endpoints.expandcollapse)),
-      [objectId, expand.join(','), collapse.join(',')]
+      [objectId, expand, collapse]
     );
   }
 
@@ -865,11 +860,11 @@ class InlineControlContainer extends HTMLElement {
   }
 
   /**
-   * @param {string} excludeUid
+   * Collapses all records except the one with the given UID.
+   * State persistence is handled by the hidden.bs.collapse event handler.
    */
-  private collapseAllRecords(excludeUid: string): Array<string> {
+  private collapseAllRecords(excludeUid: string): void {
     const formField = this.getFormFieldForElements();
-    const collapse: Array<string> = [];
 
     if (formField !== null) {
       const records = Utility.trimExplode(',', (<HTMLInputElement>formField).value);
@@ -879,20 +874,12 @@ class InlineControlContainer extends HTMLElement {
         }
 
         const recordObjectId = this.objectGroup + Separators.structureSeparator + recordUid;
-        const recordContainer = this.getRecordContainer(recordObjectId);
-        if (recordContainer.classList.contains(States.visible)) {
-          this.collapseElement(recordContainer, recordObjectId);
-
-          if (this.isNewRecord(recordObjectId)) {
-            this.updateExpandedCollapsedStateLocally(recordObjectId, false);
-          } else {
-            collapse.push(recordUid);
-          }
+        const collapseContent = this.getCollapseContent(recordObjectId);
+        if (collapseContent?.classList.contains('show')) {
+          this.collapseElement(recordObjectId);
         }
       }
     }
-
-    return collapse;
   }
 
   private getFormFieldForElements(): HTMLInputElement | null {
@@ -919,9 +906,10 @@ class InlineControlContainer extends HTMLElement {
 
     records.forEach((recordUid: string, index: number): void => {
       const recordContainer = this.getRecordContainer(objectId + Separators.structureSeparator + recordUid);
-      const headerIdentifier = recordContainer.dataset.objectIdHash + '_header';
-      const headerElement = this.querySelector(selector`[id="${headerIdentifier}"]`);
-      const sortUp = headerElement.querySelector(selector`[data-action="sort"][data-direction="${SortDirections.UP}"]`);
+      if (recordContainer === null) {
+        return;
+      }
+      const sortUp = recordContainer.querySelector(selector`[data-action="sort"][data-direction="${SortDirections.UP}"]`);
 
       if (sortUp !== null) {
         let iconIdentifier = 'actions-move-up';
@@ -936,7 +924,7 @@ class InlineControlContainer extends HTMLElement {
         });
       }
 
-      const sortDown = headerElement.querySelector(selector`[data-action="sort"][data-direction="${SortDirections.DOWN}"]`);
+      const sortDown = recordContainer.querySelector(selector`[data-action="sort"][data-direction="${SortDirections.DOWN}"]`);
       if (sortDown !== null) {
         let iconIdentifier = 'actions-move-down';
         if (index === records.length - 1) {

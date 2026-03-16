@@ -16,15 +16,14 @@ import SecurityUtility from '@typo3/core/security-utility';
 import Modal from '@typo3/backend/modal';
 import RegularEvent from '@typo3/core/event/regular-event';
 import Severity from '@typo3/backend/severity';
-import { selector } from '@typo3/core/literals';
 import ClientStorage from '@typo3/backend/storage/client';
+import FormEngine from '@typo3/backend/form-engine';
+import coreLabels from '~labels/core.core';
 import backendAltDocLabels from '~labels/backend.alt_doc';
 import type FlexFormSectionContainer from './flex-form-section-container';
 
 enum Selectors {
-  toggleSelector = '[data-bs-toggle="flexform-inline"]',
   actionFieldSelector = '.t3js-flex-control-action',
-  controlSectionSelector = '.t3js-formengine-irre-control',
   sectionContentContainerSelector = '.t3js-flex-section-content',
   sectionContainerLabelSelector = '.t3js-formengine-label',
   deleteContainerButtonSelector = '.t3js-delete',
@@ -55,14 +54,18 @@ class FlexFormContainerContainer {
     this.containerId = container.dataset.flexformContainerId;
     this.toggleKeyInLocalStorage = `formengine-flex-${parentContainer.getSectionContainer().id}-${this.containerId}-collapse`;
 
-    this.panelHeading = container.querySelector(selector`[data-bs-target="#flexform-container-${this.containerId}"]`);
-    this.panelButton = this.panelHeading.querySelector(selector`[aria-controls="flexform-container-${this.containerId}"]`);
+    this.panelButton = container.querySelector(':scope > .panel-heading .panel-button');
+    this.panelHeading = this.panelButton.closest('.panel-heading');
 
     this.registerEvents();
   }
 
   private static getCollapseInstance(container: HTMLElement, toggle: boolean): Collapse {
     return Collapse.getInstance(container) ?? new Collapse(container, { toggle });
+  }
+
+  public getCollapseContent(): HTMLElement {
+    return this.containerContent;
   }
 
   public getStatus(): ContainerStatus {
@@ -72,13 +75,14 @@ class FlexFormContainerContainer {
     };
   }
 
-  private registerEvents(): void {
+  private async registerEvents(): Promise<void> {
     if (this.parentContainer.isRestructuringAllowed()) {
       this.registerDelete();
     }
 
     this.registerPanelToggle();
-    this.registerToggle();
+    await this.registerToggle();
+    this.registerPreviewUpdate();
   }
 
   private registerDelete(): void {
@@ -99,7 +103,7 @@ class FlexFormContainerContainer {
         },
       ]);
       modal.addEventListener('button.clicked', (modalEvent: Event): void => {
-        if ((modalEvent.target as HTMLAnchorElement).name === 'yes') {
+        if ((modalEvent.target as HTMLButtonElement).name === 'yes') {
           const actionField = this.container.querySelector(Selectors.actionFieldSelector) as HTMLInputElement;
           actionField.value = 'DELETE';
 
@@ -123,41 +127,46 @@ class FlexFormContainerContainer {
     }).bindTo(this.container.querySelector(Selectors.deleteContainerButtonSelector));
   }
 
-  private registerToggle(): void {
+  private async registerToggle(): Promise<void> {
     const isCollapsed = (ClientStorage.get(this.toggleKeyInLocalStorage) ?? '1') === '1';
-    const collapseInstance = FlexFormContainerContainer.getCollapseInstance(this.containerContent, !isCollapsed);
+    FlexFormContainerContainer.getCollapseInstance(this.containerContent, !isCollapsed);
+    await FormEngine.ready();
     this.generatePreview();
-
-    new RegularEvent('click', (): void => {
-      collapseInstance.toggle();
-    }).delegateTo(this.container, `${Selectors.toggleSelector} .form-irre-header-cell:not(${Selectors.controlSectionSelector}`);
   }
 
   private registerPanelToggle(): void {
     ['hide.bs.collapse', 'show.bs.collapse'].forEach((eventName: string): void => {
       new RegularEvent(eventName, (e: Event): void => {
-        const collapseTriggered = e.type === 'hide.bs.collapse';
-        ClientStorage.set(this.toggleKeyInLocalStorage, collapseTriggered ? '1' : '0');
-
-        this.panelButton.setAttribute('aria-expanded', collapseTriggered ? 'false' : 'true');
-        this.panelButton.parentElement.classList.toggle('collapsed', collapseTriggered);
-
-        this.generatePreview();
+        if (e.target !== this.containerContent) {
+          return;
+        }
+        const isCollapsing = e.type === 'hide.bs.collapse';
+        ClientStorage.set(this.toggleKeyInLocalStorage, isCollapsing ? '1' : '0');
       }).bindTo(this.containerContent);
+    });
+  }
+
+  private registerPreviewUpdate(): void {
+    ['input', 'change'].forEach((eventName: string): void => {
+      new RegularEvent(eventName, (): void => {
+        this.generatePreview();
+      }).delegateTo(this.containerContent, 'input[type="text"], textarea');
     });
   }
 
   private generatePreview(): void {
     let previewContent = '';
-    if (this.getStatus().collapsed) {
-      const formFields: NodeListOf<HTMLInputElement|HTMLTextAreaElement> = this.containerContent.querySelectorAll('input[type="text"], textarea');
-      for (const field of formFields) {
-        let content = this.securityUtility.stripHtml(field.value);
-        if (content.length > 50) {
-          content = content.substring(0, 50) + '...';
-        }
-        previewContent += (previewContent ? ' / ' : '') + content;
+    const formFields: NodeListOf<HTMLInputElement|HTMLTextAreaElement> = this.containerContent.querySelectorAll('input[type="text"], textarea');
+    for (const field of formFields) {
+      let content = this.securityUtility.stripHtml(field.value);
+      if (content.length > 50) {
+        content = content.substring(0, 50) + '...';
       }
+      previewContent += (previewContent ? ' / ' : '') + content;
+    }
+
+    if (previewContent === '') {
+      previewContent = '[' + coreLabels.get('labels.no_title') + ']';
     }
 
     this.panelHeading.querySelector(Selectors.contentPreviewSelector).textContent = previewContent;

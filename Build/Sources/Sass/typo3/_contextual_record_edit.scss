@@ -97,10 +97,11 @@
     //
     // Flat form sections — no card borders, no backgrounds, compact spacing
     //
-    .form-section {
+    .form-section:not(.form-section .form-section) {
         --typo3-form-section-bg: transparent;
         --typo3-form-section-radius: 0;
         --typo3-form-section-padding-x: 0;
+        --typo3-form-section-padding-y: 1.5rem;
         border-left: 0;
         border-right: 0;
         border-top: 0;
@@ -109,38 +110,14 @@
             border-bottom: 0;
         }
 
-        // Restore defaults for nested form sections (inline/IRRE records)
-        .form-section {
-            --typo3-form-section-bg: var(--typo3-surface-container-low);
-            --typo3-form-section-radius: var(--typo3-component-border-radius);
-            --typo3-form-section-padding-x: 1rem;
-            border-left: var(--typo3-form-section-border-width) solid var(--typo3-form-section-border-color);
-            border-right: var(--typo3-form-section-border-width) solid var(--typo3-form-section-border-color);
-            border-top: var(--typo3-form-section-border-width) solid var(--typo3-form-section-border-color);
+        & + & {
+            margin-top: 0;
         }
-    }
-
-    .form-section + .form-section {
-        margin-top: 0;
-    }
-
-    .form-section-headline {
-        border: 0;
-        padding-bottom: 0;
-    }
-
-    .form-label {
-        font-size: .8125rem;
-        margin-bottom: .125rem;
     }
 
     //
     // Tab content spacing
     //
-    .tab-content > .tab-pane {
-        padding-top: .75rem;
-    }
-
     .form-section-tabs {
         --typo3-nav-tabs-bg: transparent;
     }

@@ -75,7 +75,6 @@ class FlexFormSectionContainer {
 
     this.registerToggleAll();
     this.registerCreateNewContainer();
-    this.registerPanelToggle();
   }
 
   private registerContainers(): void {
@@ -83,8 +82,6 @@ class FlexFormSectionContainer {
     for (const sectionContainerContainer of sectionContainerContainers) {
       this.flexformContainerContainers.push(new FlexFormContainerContainer(this, sectionContainerContainer));
     }
-
-    this.updateToggleAllState();
   }
 
   private getToggleAllButton(): HTMLButtonElement {
@@ -105,18 +102,19 @@ class FlexFormSectionContainer {
       element.value = key.toString();
     });
 
-    this.updateToggleAllState();
     this.flexformContainerContainers.splice(e.newIndex, 0, this.flexformContainerContainers.splice(e.oldIndex, 1)[0]);
   };
 
   private registerToggleAll(): void {
-    new RegularEvent('click', (e: Event): void => {
-      const trigger = e.target as HTMLButtonElement;
-      const showAll = trigger.dataset.expandAll === 'true';
-      const collapsibles: NodeListOf<HTMLElement> = this.container.querySelectorAll(Selectors.sectionContentContainerSelector);
+    new RegularEvent('click', (): void => {
+      const hasCollapsed = this.flexformContainerContainers.some(c => c.getStatus().collapsed);
 
-      for (const collapsible of collapsibles) {
-        if (showAll) {
+      for (const containerContainer of this.flexformContainerContainers) {
+        const collapsible = containerContainer.getCollapseContent();
+        if (collapsible === null) {
+          continue;
+        }
+        if (hasCollapsed) {
           FlexFormSectionContainer.getCollapseInstance(collapsible).show();
         } else {
           FlexFormSectionContainer.getCollapseInstance(collapsible).hide();
@@ -167,8 +165,6 @@ class FlexFormSectionContainer {
         }
       }
 
-      this.updateToggleAllState();
-
       FormEngine.reinitialize();
       FormEngine.Validation.initializeInputFields();
       FormEngine.Validation.validate(sectionContainer);
@@ -185,24 +181,9 @@ class FlexFormSectionContainer {
       );
 
       FormEngine.Validation.validate(this.container);
-      this.updateToggleAllState();
     }).bindTo(this.container);
   }
 
-  private registerPanelToggle(): void {
-    ['hide.bs.collapse', 'show.bs.collapse'].forEach((eventName: string): void => {
-      new RegularEvent(eventName, (): void => {
-        this.updateToggleAllState();
-      }).delegateTo(this.container, Selectors.sectionContentContainerSelector);
-    });
-  }
-
-  private updateToggleAllState(): void {
-    if (this.flexformContainerContainers.length > 0) {
-      const firstContainer = this.flexformContainerContainers.find(Boolean);
-      this.getToggleAllButton().dataset.expandAll = firstContainer.getStatus().collapsed === true ? 'true' : 'false';
-    }
-  }
 }
 
 export default FlexFormSectionContainer;

@@ -11,60 +11,6 @@
 }
 
 //
-// Form Irre
-//
-.form-irre-header {
-    display: flex;
-    align-items: center;
-    user-select: none;
-    gap: .25rem;
-}
-
-.form-irre-header-cell {
-    vertical-align: middle;
-    white-space: nowrap;
-}
-
-.form-irre-header-button {
-    display: flex;
-    text-align: start;
-    align-items: center;
-    align-self: stretch;
-    background: transparent;
-    border: 0;
-    width: 100%;
-    padding: 0;
-    gap: .25rem;
-}
-
-.form-file-header-button {
-    @extend .form-irre-header-button;
-    flex-direction: column;
-    text-align: start;
-}
-
-.form-irre-header-body {
-    width: 100%;
-    font-weight: normal;
-    white-space: normal;
-}
-
-.form-irre-header-icon {
-    padding-inline-end: 0;
-}
-
-.form-irre-header-thumbnail {
-    padding-inline-end: .25rem;
-    width: 100%;
-}
-
-.form-irre-header-control {
-    display: flex;
-    align-items: center;
-    gap: .25rem;
-}
-
-//
 // Autoresize for Textareas
 //
 // no manual resizing for textareas (works on non-IE browser only anyways)
