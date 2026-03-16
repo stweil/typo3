@@ -127,7 +127,19 @@ class InlineControlContainer extends HTMLElement {
     return parseInt(this.dataset.max, 10) || 0;
   }
 
+  public get type(): 'record' | 'file' {
+    return this.dataset.type === 'file' ? 'file' : 'record';
+  }
+
   private get endpoints(): InlineEndpoints {
+    if (this.type === 'file') {
+      return {
+        create: 'file_reference_create',
+        details: 'file_reference_details',
+        synchronizelocalize: 'file_reference_synchronizelocalize',
+        expandcollapse: 'file_reference_expandcollapse',
+      };
+    }
     return {
       create: 'record_inline_create',
       details: 'record_inline_details',

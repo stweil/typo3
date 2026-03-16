@@ -109,13 +109,6 @@
             border-bottom: 0;
         }
 
-        typo3-formengine-container-files {
-            .form-group,
-            .panel-group {
-                margin-bottom: 0;
-            }
-        }
-
         // Restore defaults for nested form sections (inline/IRRE records)
         .form-section {
             --typo3-form-section-bg: var(--typo3-surface-container-low);
@@ -150,18 +143,6 @@
 
     .form-section-tabs {
         --typo3-nav-tabs-bg: transparent;
-    }
-
-    //
-    // File element: Improved "allowed file types" styling
-    //
-    typo3-formengine-container-files .form-text {
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-
-        .badge-list {
-            margin-top: .5rem;
-        }
     }
 }
 
