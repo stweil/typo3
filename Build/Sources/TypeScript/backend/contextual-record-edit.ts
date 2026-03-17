@@ -35,7 +35,6 @@ type ContextualRecordEditOptions = {
  * @exports @typo3/backend/contextual-record-edit
  */
 class ContextualRecordEdit {
-  private saveButton: HTMLButtonElement | null = null;
   private closeButton: HTMLButtonElement | null = null;
   private fullscreenButton: HTMLAnchorElement | null = null;
   private readonly options: ContextualRecordEditOptions;
@@ -43,7 +42,6 @@ class ContextualRecordEdit {
   constructor(options: ContextualRecordEditOptions = {}) {
     this.options = options;
     DocumentService.ready().then((): void => {
-      this.saveButton = document.querySelector('.t3js-contextual-save');
       this.closeButton = document.querySelector('.t3js-contextual-close');
       this.fullscreenButton = document.querySelector('.t3js-contextual-fullscreen');
       this.initialize();
@@ -51,11 +49,6 @@ class ContextualRecordEdit {
   }
 
   private initialize(): void {
-    FormEngine.ready().then((): void => {
-      this.observeFormChanges();
-    });
-
-    this.initializeSaveButton();
     this.initializeCloseButton();
     this.initializeFullscreenButton();
     this.initializeEscapeKey();
@@ -65,45 +58,6 @@ class ContextualRecordEdit {
     if (!this.options.justSaved) {
       this.focusFirstElement();
     }
-  }
-
-  private initializeSaveButton(): void {
-    if (!this.saveButton) {
-      return;
-    }
-    // The button is type="submit" with form="ContextualRecordEditController" so that
-    // pressing Enter in any form field triggers save (native browser behavior).
-    // We intercept to go through FormEngine.saveDocument() which normalizes fields first.
-    this.saveButton.addEventListener('click', (e: Event): void => {
-      e.preventDefault();
-      FormEngine.saveDocument();
-    });
-  }
-
-  /**
-   * Enable the Save button only when the form has unsaved changes.
-   *
-   * Uses a MutationObserver on class attribute changes because FormEngine
-   * does not dispatch events when fields are marked as changed. It applies
-   * the `.has-change` CSS class in multiple code paths, so observing the
-   * DOM is the most reliable way to catch all of them without modifying
-   * FormEngine itself. Once FormEngine provides a dedicated change event,
-   * this observer should be replaced with a simple event listener.
-   */
-  private observeFormChanges(): void {
-    if (!this.saveButton) {
-      return;
-    }
-    const updateSaveButton = (): void => {
-      this.saveButton.disabled = !FormEngine.hasChange();
-    };
-    updateSaveButton();
-    const observer = new MutationObserver(updateSaveButton);
-    observer.observe(document.body, {
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['class'],
-    });
   }
 
   private initializeCloseButton(): void {
