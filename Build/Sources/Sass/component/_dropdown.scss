@@ -122,7 +122,6 @@
     box-shadow: var(--typo3-dropdown-box-shadow);
     position-anchor: --dropdown;
     position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
-    position-try-order: most-block-size;
     overflow-y: auto;
 
     &:popover-open {
