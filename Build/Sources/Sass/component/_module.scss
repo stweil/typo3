@@ -93,6 +93,10 @@ body:has(.module) *:target {
         &:has(typo3-backend-content-navigation-toggle[hidden]) {
             display: none;
         }
+
+        &:last-child:not(:first-child) {
+            margin-inline-start: auto;
+        }
     }
 
     &-column-grow {
