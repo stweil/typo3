@@ -302,8 +302,8 @@ class InlineControlContainer extends HTMLElement {
 
     new RegularEvent('shown.bs.collapse', (e: Event): void => {
       const panelCollapse = e.target as HTMLDivElement;
-      const recordContainer = panelCollapse.parentElement as HTMLDivElement;
-      if (recordContainer.closest('typo3-formengine-container-inline') !== this) {
+      const recordContainer = panelCollapse.closest<HTMLDivElement>('[data-object-id]');
+      if (recordContainer === null || recordContainer.closest('typo3-formengine-container-inline') !== this) {
         return;
       }
       this.persistExpandCollapseState(recordContainer.dataset.objectId, true);
@@ -311,8 +311,8 @@ class InlineControlContainer extends HTMLElement {
 
     new RegularEvent('hidden.bs.collapse', (e: Event): void => {
       const panelCollapse = e.target as HTMLDivElement;
-      const recordContainer = panelCollapse.parentElement as HTMLDivElement;
-      if (recordContainer.closest('typo3-formengine-container-inline') !== this) {
+      const recordContainer = panelCollapse.closest<HTMLDivElement>('[data-object-id]');
+      if (recordContainer === null || recordContainer.closest('typo3-formengine-container-inline') !== this) {
         return;
       }
       this.persistExpandCollapseState(recordContainer.dataset.objectId, false);

@@ -76,7 +76,7 @@ class QueryGenerator {
     new RegularEvent('change', (event: Event, element: HTMLSelectElement) => {
       const titleField = <HTMLInputElement>this.form.querySelector('input[name="storeControl[title]"]');
       if (element.value !== '0') {
-        titleField.value = element.querySelector('option:selected').textContent;
+        titleField.value = element.options[element.selectedIndex].textContent;
       } else {
         titleField.value = '';
       }

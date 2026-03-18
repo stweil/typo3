@@ -237,17 +237,11 @@ typo3-backend-tab-scroller > .nav-tabs {
 // Tabs
 //
 .tab-content {
-    margin-top: calc(var(--typo3-spacing) / 2);
-
     > .tab-pane {
         display: none;
     }
 
     > .active {
         display: block;
-    }
-
-    > .form-section {
-        --typo3-form-section-radius-top: 0;
     }
 }

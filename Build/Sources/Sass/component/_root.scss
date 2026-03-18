@@ -166,7 +166,7 @@
     // WCAG contrast ratios with the text color in each mode.
     --typo3-state-default-color: light-dark(var(--token-color-neutral-90), var(--token-color-neutral-15));
     --typo3-state-default-bg: light-dark(var(--token-color-neutral-3), var(--token-color-neutral-85));
-    --typo3-state-default-border-color: light-dark(var(--token-color-neutral-25), var(--token-color-neutral-75));
+    --typo3-state-default-border-color: light-dark(var(--token-color-neutral-30), var(--token-color-neutral-70));
     --typo3-state-default-hover-color: var(--typo3-state-default-color);
     --typo3-state-default-hover-bg: light-dark(var(--token-color-neutral-10), var(--token-color-neutral-80));
     --typo3-state-default-hover-border-color: light-dark(var(--token-color-neutral-35), var(--token-color-neutral-70));
