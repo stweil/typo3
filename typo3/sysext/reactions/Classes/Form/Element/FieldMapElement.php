@@ -29,17 +29,6 @@ use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
  */
 class FieldMapElement extends AbstractFormElement
 {
-    /**
-     * Default field information enabled for this element.
-     *
-     * @var array
-     */
-    protected $defaultFieldInformation = [
-        'tcaDescription' => [
-            'renderType' => 'tcaDescription',
-        ],
-    ];
-
     protected array $supportedFieldTypes = ['input', 'textarea', 'text', 'email', 'number', 'datetime', 'color'];
 
     public function __construct(
