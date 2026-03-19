@@ -28,7 +28,7 @@ import {
   type PropertyGridEditorEntry,
   PropertyGridEditorUpdateEvent
 } from '@typo3/form/backend/form-editor/component/property-grid-editor';
-import '@typo3/rte-ckeditor/ckeditor5';
+const ckeditor = await import('@typo3/rte-ckeditor/ckeditor5').catch((): null => null);
 import '@typo3/form/backend/form-editor/component/date-editor';
 import {
   DateEditorChangeEvent
@@ -2035,25 +2035,26 @@ export function renderTextareaEditor(
     if (!wrapper) {
       throw new Error('Textarea wrapper element not found');
     }
+    if (ckeditor) {
+      const textareaId = textarea.id;
+      const rteId = textareaId ? textareaId + 'ckeditor5' : '';
 
-    const textareaId = textarea.id;
-    const rteId = textareaId ? textareaId + 'ckeditor5' : '';
+      const rteElement = document.createElement('typo3-rte-ckeditor-ckeditor5');
+      if (rteId) {
+        rteElement.id = rteId;
+      }
 
-    const rteElement = document.createElement('typo3-rte-ckeditor-ckeditor5');
-    if (rteId) {
-      rteElement.id = rteId;
+      const optionsJson = JSON.stringify(rteOptions);
+      rteElement.setAttribute('options', optionsJson);
+
+      textarea.setAttribute('slot', 'textarea');
+      rteElement.appendChild(textarea);
+
+      wrapper.innerHTML = '';
+      wrapper.appendChild(rteElement);
+
+      (rteElement as any).options = rteOptions;
     }
-
-    const optionsJson = JSON.stringify(rteOptions);
-    rteElement.setAttribute('options', optionsJson);
-
-    textarea.setAttribute('slot', 'textarea');
-    rteElement.appendChild(textarea);
-
-    wrapper.innerHTML = '';
-    wrapper.appendChild(rteElement);
-
-    (rteElement as any).options = rteOptions;
   }
 
   validateCollectionElement(propertyPath, editorHtml);
