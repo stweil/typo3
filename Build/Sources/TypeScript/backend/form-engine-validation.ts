@@ -22,6 +22,7 @@ import Modal from '@typo3/backend/modal';
 import Severity from '@typo3/backend/severity';
 import Utility from './utility';
 import RegularEvent from '@typo3/core/event/regular-event';
+import ThrottleEvent from '@typo3/core/event/throttle-event';
 import DomHelper from '@typo3/backend/utility/dom-helper';
 import { selector } from '@typo3/core/literals';
 import SubmitInterceptor from '@typo3/backend/form/submit-interceptor';
@@ -76,6 +77,10 @@ export default class FormEngineValidation {
       FormEngineValidation.validateField(target);
       formEngineInstance.markFieldAsChanged(target);
     }).delegateTo(formEngineInstance.formElement, FormEngineValidation.rulesSelector);
+
+    new ThrottleEvent('input', (e: Event, target: FormEngineFieldElement): void => {
+      FormEngineValidation.validateField(target);
+    }, 100).delegateTo(formEngineInstance.formElement, FormEngineValidation.rulesSelector);
 
     FormEngineValidation.registerSubmitCallback();
 
