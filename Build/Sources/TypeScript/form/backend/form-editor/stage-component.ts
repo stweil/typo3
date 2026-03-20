@@ -20,6 +20,8 @@ import Icons from '@typo3/backend/icons';
 import Sortable from 'sortablejs';
 import type { FormElementStageItem, Validator, SelectOption } from '@typo3/form/backend/form-editor/component/form-element-stage-item';
 import '@typo3/form/backend/form-editor/component/form-element-stage-item';
+import type { FormElementStageItemToolbar } from '@typo3/form/backend/form-editor/component/form-element-stage-item-toolbar';
+import '@typo3/form/backend/form-editor/component/form-element-stage-item-toolbar';
 import type { PageStageItem } from '@typo3/form/backend/form-editor/component/page-stage-item';
 import '@typo3/form/backend/form-editor/component/page-stage-item';
 
@@ -58,7 +60,6 @@ const defaultConfiguration: Configuration = {
     noSorting: 'data-no-sorting'
   },
   domElementDataAttributeValues: {
-    abstractViewToolbar: 'elementToolbar',
     abstractViewToolbarNewElement: 'stageElementToolbarNewElement',
     abstractViewToolbarNewElementSplitButton: 'stageElementToolbarNewElementSplitButton',
     abstractViewToolbarNewElementSplitButtonAfter: 'stageElementToolbarNewElementSplitButtonAfter',
@@ -166,20 +167,16 @@ function renderNestedSortableListItem(formElement: FormElement): HTMLElement {
   } catch {
     rawTemplate = null;
   }
-  if (!rawTemplate) {
-    rawTemplate = getHelper().getTemplateElement('FormElement-_UnknownElement');
-    assert(
-      rawTemplate !== null,
-      'No template found for element "' + formElement.get('__identifierPath') + '"',
-      1478987818
-    );
-  }
 
-  const importedNode = document.importNode(rawTemplate.content, true);
+  // When no custom template is registered, the web component renders the element directly.
+  // The _UnknownElement template fallback is no longer required.
+  const shouldRenderWebComponent = rawTemplate === null;
 
   const templateEl = document.createElement('div');
   templateEl.setAttribute(getHelper().getDomElementDataAttribute('elementIdentifier'), formElement.get('__identifierPath'));
-  templateEl.append(importedNode);
+  if (rawTemplate) {
+    templateEl.append(document.importNode(rawTemplate.content, true));
+  }
 
   const isCompositeFormElement = getFormElementDefinition(formElement, '_isCompositeFormElement');
   if (isCompositeFormElement) {
@@ -194,9 +191,20 @@ function renderNestedSortableListItem(formElement: FormElement): HTMLElement {
   if (formElement.get('renderingOptions.enabled') === false) {
     templateEl.classList.add('formeditor-element-hidden');
   }
-  listItem.append(templateEl);
 
-  const shouldRenderWebComponent = getHelper().getTemplateElement('FormElement-' + formElement.get('type')) === null;
+  // For non-top-level elements rendered via a custom Fluid template (legacy path),
+  // automatically prepend the standalone toolbar web component.
+  if (!isTopLevelFormElement && !shouldRenderWebComponent
+    && !templateEl.querySelector('typo3-form-form-element-stage-item-toolbar')
+  ) {
+    const toolbarEl = document.createElement('typo3-form-form-element-stage-item-toolbar');
+    if (isCompositeFormElement) {
+      toolbarEl.setAttribute('is-composite', '');
+    }
+    templateEl.prepend(toolbarEl);
+  }
+
+  listItem.append(templateEl);
 
   if (isTopLevelFormElement && shouldRenderWebComponent) {
     renderTopLevelStageItem(formElement, templateEl);
@@ -433,12 +441,19 @@ export function getAbstractViewFormElementDomElement(formElement?: FormElement |
 }
 
 export function removeAllStageToolbars(): void {
-  stageDomElement?.querySelectorAll(getHelper().getDomElementDataIdentifierSelector('abstractViewToolbar'))
-    .forEach((el) => el.remove());
+  // Standalone toolbar web components — deactivated (stay in DOM so event
+  // listeners and the is-composite state survive across selection cycles).
+  stageDomElement?.querySelectorAll('typo3-form-form-element-stage-item-toolbar')
+    .forEach((el) => { (el as unknown as FormElementStageItemToolbar).active = false; });
   hideFormElementStageItemToolbar();
 }
 
 /**
+ * @deprecated since TYPO3 v14.2, will be removed in TYPO3 v15.
+ *   Only used by the legacy template-based stage rendering approach.
+ *   Web component-based elements handle their toolbar via the
+ *   `toolbarConfig` property of `<typo3-form-form-element-stage-item>`.
+ *   See Deprecation #109306.
  * @publish view/insertElements/perform/after
  * @publish view/insertElements/perform/inside
  * @throws 1479035778
@@ -456,11 +471,7 @@ export function createAbstractViewFormElementToolbar(formElement: FormElement): 
     return null;
   }
 
-  const importedNode = document.importNode(rawTemplate.content, true);
-  const template = importedNode.firstElementChild as HTMLElement ?? document.createElement('div');
-
-  const qs = (id: string, root: HTMLElement = template): HTMLElement | null =>
-    root.querySelector(getHelper().getDomElementDataIdentifierSelector(id));
+  const template = document.importNode(rawTemplate.content, true).firstElementChild as HTMLElement ?? document.createElement('div');
 
   getHelper().getTemplatePropertyElement('_type', template)?.append(
     document.createTextNode(getFormElementDefinition(formElement, 'label'))
@@ -468,6 +479,26 @@ export function createAbstractViewFormElementToolbar(formElement: FormElement): 
   getHelper().getTemplatePropertyElement('_identifier', template)?.append(
     document.createTextNode(formElement.get('identifier'))
   );
+
+  wireAbstractViewFormElementToolbarEventListeners(template, formElement);
+
+  return template;
+}
+
+/**
+ * Wires toolbar button event listeners onto an already-cloned toolbar HTMLElement.
+ * Only used by the deprecated {@link createAbstractViewFormElementToolbar} function
+ * (global _ElementToolbar template path).  New code uses
+ * `<typo3-form-form-element-stage-item-toolbar>` which dispatches its own events.
+ *
+ * @deprecated since TYPO3 v14.2, will be removed in TYPO3 v15 together with
+ *   {@link createAbstractViewFormElementToolbar}.
+ */
+function wireAbstractViewFormElementToolbarEventListeners(toolbar: HTMLElement, formElement: FormElement): void {
+  const formElementTypeDefinition = getFormElementDefinition(formElement, undefined);
+
+  const qs = (id: string): HTMLElement | null =>
+    toolbar.querySelector(getHelper().getDomElementDataIdentifierSelector(id));
 
   if (formElementTypeDefinition._isCompositeFormElement) {
     getViewModel().hideComponent(qs('abstractViewToolbarNewElement'));
@@ -501,8 +532,6 @@ export function createAbstractViewFormElementToolbar(formElement: FormElement): 
   qs('abstractViewToolbarRemoveElement')?.addEventListener('click', function() {
     getViewModel().showRemoveFormElementModal();
   });
-
-  return template;
 }
 
 export function createAndAddAbstractViewFormElementToolbar(
@@ -513,17 +542,49 @@ export function createAndAddAbstractViewFormElementToolbar(
     formElement = getCurrentlySelectedFormElement();
   }
 
-  const webComponent = selectedFormElementDomElement.querySelector('typo3-form-form-element-stage-item') as FormElementStageItem;
-
-  if (webComponent && webComponent.toolbarConfig) {
-    webComponent.toolbarConfig = { ...webComponent.toolbarConfig, showToolbar: true };
+  const stageItem = selectedFormElementDomElement.querySelector('typo3-form-form-element-stage-item') as FormElementStageItem;
+  if (stageItem && stageItem.toolbarConfig) {
+    stageItem.toolbarConfig = { ...stageItem.toolbarConfig, showToolbar: true };
     return;
   }
 
-  const toolbar = createAbstractViewFormElementToolbar(formElement);
-  if (toolbar) {
-    selectedFormElementDomElement.prepend(toolbar);
+  const formElementTypeDefinition = getFormElementDefinition(formElement, undefined);
+  if (formElementTypeDefinition._isTopLevelFormElement) {
+    return;
   }
+
+  let toolbar = selectedFormElementDomElement.querySelector('typo3-form-form-element-stage-item-toolbar') as unknown as FormElementStageItemToolbar | null;
+  if (!toolbar) {
+    const toolbarEl = document.createElement('typo3-form-form-element-stage-item-toolbar');
+    selectedFormElementDomElement.prepend(toolbarEl);
+    toolbar = toolbarEl as unknown as FormElementStageItemToolbar;
+  }
+
+  // Wire events exactly once per toolbar instance.
+  if (!toolbar.dataset.eventsWired) {
+    toolbar.dataset.eventsWired = 'true';
+
+    toolbar.addEventListener('toolbar-new-element-after', () => {
+      getPublisherSubscriber().publish('view/stage/abstract/elementToolbar/button/newElement/clicked', [
+        'view/insertElements/perform/after',
+        { disableElementTypes: [] }
+      ]);
+    });
+
+    toolbar.addEventListener('toolbar-new-element-inside', () => {
+      getPublisherSubscriber().publish('view/stage/abstract/elementToolbar/button/newElement/clicked', [
+        'view/insertElements/perform/inside',
+        { disableElementTypes: [], onlyEnableElementTypes: [] }
+      ]);
+    });
+
+    toolbar.addEventListener('toolbar-remove-element', () => {
+      getViewModel().showRemoveFormElementModal();
+    });
+  }
+
+  toolbar.isComposite = formElementTypeDefinition._isCompositeFormElement || false;
+  toolbar.active = true;
 }
 
 export function hideFormElementStageItemToolbar(): void {
@@ -770,13 +831,9 @@ export function renderFormElementStageItem(formElement: FormElement, template: H
     stageItem.classList.add('formeditor-element-hidden');
   }
 
-  // Configure toolbar (will be shown when element is selected)
-  const formElementTypeDefinition = getFormElementDefinition(formElement, undefined);
   stageItem.toolbarConfig = {
-    showToolbar: false, // Initially hidden, will be toggled when selected
-    isCompositeElement: formElementTypeDefinition._isCompositeFormElement || false,
-    elementTypeLabel: getFormElementDefinition(formElement, 'label'),
-    elementIdentifier: formElement.get('identifier')
+    showToolbar: false,
+    isCompositeElement: getFormElementDefinition(formElement, '_isCompositeFormElement') || false,
   };
 
   // Register event listeners for toolbar actions
@@ -806,6 +863,10 @@ export function renderFormElementStageItem(formElement: FormElement, template: H
   template.replaceChildren(stageItem);
 }
 
+/**
+ * @deprecated since TYPO3 v14.2, will be removed in TYPO3 v15.
+ *   See also Feature #107058.
+ */
 export function eachTemplateProperty(
   formElement: FormElement,
   template: HTMLElement,
@@ -822,6 +883,11 @@ export function eachTemplateProperty(
   });
 }
 
+/**
+ * @deprecated since TYPO3 v14.2, will be removed in TYPO3 v15.
+ *   Implement a custom rendering instead.
+ *   See also Feature #107058.
+ */
 export function renderCheckboxTemplate(formElement: FormElement, template: HTMLElement) {
   renderSimpleTemplateWithValidators(formElement, template);
 
@@ -838,6 +904,10 @@ export function renderCheckboxTemplate(formElement: FormElement, template: HTMLE
 }
 
 /**
+ * @deprecated since TYPO3 v14.2, will be removed in TYPO3 v15.
+ *   Implement a custom rendering instead.
+ *   See also Feature #107058.
+ *
  * @throws 1479035696
  */
 export function renderSimpleTemplate(formElement: FormElement, template: HTMLElement): void {
@@ -875,6 +945,10 @@ export function renderSimpleTemplate(formElement: FormElement, template: HTMLEle
 }
 
 /**
+ * @deprecated since TYPO3 v14.2, will be removed in TYPO3 v15.
+ *   Implement a custom rendering instead.
+ *   See also Feature #107058.
+ *
  * @throws 1479035674
  */
 export function renderSimpleTemplateWithValidators(formElement: FormElement, template: HTMLElement): void {
@@ -937,6 +1011,11 @@ export function renderSimpleTemplateWithValidators(formElement: FormElement, tem
   }
 }
 
+/**
+ * @deprecated since TYPO3 v14.2, will be removed in TYPO3 v15.
+ *   Implement a custom rendering instead.
+ *   See also Feature #107058.
+ */
 export function renderSelectTemplates(formElement: FormElement, template: HTMLElement): void {
   const multiValueContainerSel = getHelper().getDomElementDataIdentifierSelector('multiValueContainer');
   const multiValueContainerEl = template.querySelector(multiValueContainerSel);
@@ -993,6 +1072,11 @@ export function renderSelectTemplates(formElement: FormElement, template: HTMLEl
   }
 }
 
+/**
+ * @deprecated since TYPO3 v14.2, will be removed in TYPO3 v15.
+ *   Implement a custom rendering instead.
+ *   See also Feature #107058.
+ */
 export function renderFileUploadTemplates(formElement: FormElement, template: HTMLElement): void {
   const multiValueContainerSel = getHelper().getDomElementDataIdentifierSelector('multiValueContainer');
   const multiValueContainerEl = template.querySelector(multiValueContainerSel);

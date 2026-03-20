@@ -13,8 +13,8 @@
 
 import { html, LitElement, nothing, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import labels from '~labels/form.form_editor_javascript';
 import '@typo3/backend/element/icon-element';
+import '@typo3/form/backend/form-editor/component/form-element-stage-item-toolbar';
 import { stripTags } from '../utility/string-utility';
 
 export interface Validator {
@@ -28,11 +28,6 @@ export interface SelectOption {
   selected?: boolean;
 }
 
-export interface FileUploadInfo {
-  saveToFileMount?: string;
-  allowedMimeTypes?: string[];
-}
-
 interface MultivalueItem {
   label: string;
   className?: string;
@@ -41,8 +36,6 @@ interface MultivalueItem {
 export interface ToolbarConfig {
   showToolbar: boolean;
   isCompositeElement: boolean;
-  elementTypeLabel: string;
-  elementIdentifier: string;
 }
 
 /**
@@ -80,7 +73,10 @@ export class FormElementStageItem extends LitElement {
 
   protected override render(): TemplateResult {
     return html`
-      ${this.renderToolbar()}
+      <typo3-form-form-element-stage-item-toolbar
+        ?active="${this.toolbarConfig?.showToolbar ?? false}"
+        ?is-composite="${this.toolbarConfig?.isCompositeElement ?? false}">
+      </typo3-form-form-element-stage-item-toolbar>
       <div class="formeditor-element-label">
         <span>${this.elementType}</span>: <span>${this.elementIdentifier}</span>
       </div>
@@ -119,141 +115,6 @@ export class FormElementStageItem extends LitElement {
         ${contentItems}
       </div>
     `;
-  }
-
-  /**
-   * Renders the element toolbar if configured
-   */
-  private renderToolbar(): TemplateResult | typeof nothing {
-    if (!this.toolbarConfig?.showToolbar) {
-      return nothing;
-    }
-
-    return html`
-      <div class="formeditor-element-toolbar">
-        <div class="btn-toolbar">
-          ${this.renderToolbarNewElementButton()}
-          <div class="btn-group btn-group-sm" role="group">
-            <a
-              class="btn btn-default"
-              href="#"
-              title="${labels.get('formEditor.stage.toolbar.remove')}"
-              @click="${this.handleRemoveElement}">
-              <typo3-backend-icon identifier="actions-edit-delete" size="small"></typo3-backend-icon>
-            </a>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  /**
-   * Renders the "New Element" button(s) based on element type
-   */
-  private renderToolbarNewElementButton(): TemplateResult {
-    if (this.toolbarConfig?.isCompositeElement) {
-      return html`
-        <div class="btn-group btn-group-sm" role="group">
-          <div class="btn-group">
-            <button
-              type="button"
-              class="btn btn-sm btn-default dropdown-toggle"
-              popovertarget="toggle-menu-new-form-element"
-              aria-expanded="false"
-              title="${labels.get('formEditor.stage.toolbar.new_element')}">
-              <typo3-backend-icon identifier="actions-document-new" size="small"></typo3-backend-icon>
-              <span class="visually-hidden">Toggle Dropdown</span>
-            </button>
-            <ul id="toggle-menu-new-form-element" class="dropdown-menu dropdown-menu-right" popover>
-              <li data-no-sorting>
-                <a
-                  href="#"
-                  class="dropdown-item"
-                  @click="${this.handleNewElementInside}">
-                  <span class="dropdown-item-columns">
-                    <span class="dropdown-item-column dropdown-item-column-icon">
-                      <typo3-backend-icon identifier="actions-form-insert-in" size="small"></typo3-backend-icon>
-                    </span>
-                    <span class="dropdown-item-column dropdown-item-column-text">
-                      ${labels.get('formEditor.stage.toolbar.new_element.inside')}
-                    </span>
-                  </span>
-                </a>
-              </li>
-              <li data-no-sorting>
-                <a
-                  href="#"
-                  class="dropdown-item"
-                  @click="${this.handleNewElementAfter}">
-                  <span class="dropdown-item-columns">
-                    <span class="dropdown-item-column dropdown-item-column-icon">
-                      <typo3-backend-icon identifier="actions-form-insert-after" size="small"></typo3-backend-icon>
-                    </span>
-                    <span class="dropdown-item-column dropdown-item-column-text">
-                      ${labels.get('formEditor.stage.toolbar.new_element.after')}
-                    </span>
-                  </span>
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      `;
-    }
-
-    return html`
-      <div class="btn-group btn-group-sm" role="group">
-        <a
-          class="btn btn-default"
-          href="#"
-          title="${labels.get('formEditor.stage.toolbar.new_element.after')}"
-          @click="${this.handleNewElementAfter}">
-          <typo3-backend-icon identifier="actions-document-new" size="small"></typo3-backend-icon>
-        </a>
-      </div>
-    `;
-  }
-
-  /**
-   * Event handler for "New Element After" action
-   */
-  private handleNewElementAfter(event: Event): void {
-    event.preventDefault();
-    this.dispatchEvent(new CustomEvent('toolbar-new-element-after', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        elementIdentifier: this.elementIdentifier
-      }
-    }));
-  }
-
-  /**
-   * Event handler for "New Element Inside" action
-   */
-  private handleNewElementInside(event: Event): void {
-    event.preventDefault();
-    this.dispatchEvent(new CustomEvent('toolbar-new-element-inside', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        elementIdentifier: this.elementIdentifier
-      }
-    }));
-  }
-
-  /**
-   * Event handler for "Remove Element" action
-   */
-  private handleRemoveElement(event: Event): void {
-    event.preventDefault();
-    this.dispatchEvent(new CustomEvent('toolbar-remove-element', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        elementIdentifier: this.elementIdentifier
-      }
-    }));
   }
 
   /**
