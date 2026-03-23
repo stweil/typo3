@@ -11,7 +11,7 @@
  * The TYPO3 project - inspiring people to share!
  */
 
-import { html, LitElement, type PropertyValues, type TemplateResult } from 'lit';
+import { html, LitElement, nothing, type PropertyValues, type TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import Modal from '@typo3/backend/modal';
@@ -22,6 +22,7 @@ import '@typo3/backend/element/spinner-element';
 import type { ProgressTrackerElement } from '@typo3/backend/element/progress-tracker-element';
 import type { WizardStepInterface } from '@typo3/backend/wizard/steps/wizard-step-interface';
 import type { WizardStepValueInterface } from '@typo3/backend/wizard/steps/wizard-step-value-interface';
+import type { WizardStepAfterRenderInterface } from '@typo3/backend/wizard/steps/wizard-step-after-render-interface';
 import type {
   WizardStepSummaryInterface
 } from '@typo3/backend/wizard/steps/wizard-step-summary-interface';
@@ -30,6 +31,7 @@ import FinisherStep from '@typo3/backend/wizard/steps/finisher-step';
 import type { SubmissionServiceInterface } from '@typo3/backend/wizard/finisher/submission-service-interface';
 import type { SummaryItem } from '@typo3/backend/wizard/steps/summary-item-interface';
 import wizardLabels from '~labels/backend.wizards.general';
+import { BeforeNextStepEvent } from '@typo3/backend/wizard/events/before-next-step-event';
 
 export type DataStore = object;
 
@@ -44,8 +46,7 @@ export class Wizard extends LitElement {
   @state() protected currentStepIndex: number = 0;
   @state() protected currentStep!: WizardStepInterface;
   @state() protected dataStore: DataStore = {};
-
-  private allSteps: WizardStepInterface[] = [];
+  @state() protected allSteps: WizardStepInterface[] = [];
 
   private progressTracker: ProgressTrackerElement | null = null;
 
@@ -153,7 +154,7 @@ export class Wizard extends LitElement {
     return this;
   }
 
-  protected override updated(_changedProperties: PropertyValues) {
+  protected override async updated(_changedProperties: PropertyValues) {
     super.updated(_changedProperties);
 
     // init wizard if steps and submissionService are passed
@@ -168,10 +169,22 @@ export class Wizard extends LitElement {
         new FinisherStep(this, this.submissionService),
       ];
 
+      this.progressTracker.requestUpdate();
       if (!this.currentStep) {
         this.currentStep = this.allSteps[this.currentStepIndex];
       }
     }
+
+    if (this.currentStep && _changedProperties.has('currentStep')) {
+      if (this.hasAfterRender(this.currentStep)) {
+        await this.currentStep.afterRender();
+        this.requestUpdate();
+      }
+    }
+  }
+
+  private hasAfterRender(step: WizardStepInterface): step is WizardStepInterface & WizardStepAfterRenderInterface {
+    return step && typeof (step as any).afterRender === 'function';
   }
 
   private hasSummary(step: WizardStepInterface): step is WizardStepInterface & WizardStepSummaryInterface {
@@ -189,7 +202,7 @@ export class Wizard extends LitElement {
   private renderWizardButtons(): TemplateResult {
     return html`
       ${this.renderPreviousButton()}
-      ${this.renderNextButton()}
+      ${this.renderNextButtons()}
     `;
   }
 
@@ -208,12 +221,25 @@ export class Wizard extends LitElement {
     `;
   }
 
-  private renderNextButton(): TemplateResult {
+  private renderNextButtons(): TemplateResult {
     const isComplete = this.currentStep?.isComplete();
-
     let buttonLabel: string;
+    let resetButtonHtml: TemplateResult | typeof nothing = nothing;
+
     if (this.currentStep?.key === 'finisher') {
       buttonLabel = wizardLabels.get('wizard.buttons.finish');
+
+      const finisherStep: FinisherStep = this.currentStep as FinisherStep;
+      if (finisherStep?.resetButtonTitle) {
+        resetButtonHtml = html`
+          <button type="button" class="${classMap({ 'btn': true, 'btn-secondary': true })}"
+            @click="${this.handleRestart}"
+          >
+            <typo3-backend-icon identifier="actions-plus" size="small"></typo3-backend-icon>
+            ${finisherStep?.resetButtonTitle}
+          </button>
+         `;
+      }
     } else if (this.currentStep?.key === 'confirm') {
       buttonLabel = this.confirmButtonLabel;
     } else {
@@ -221,12 +247,15 @@ export class Wizard extends LitElement {
     }
 
     return html`
-      <button type="button" class="${classMap({ 'btn': true, 'btn-primary': true, 'disabled': !isComplete })}"
-        @click="${this.handleNext}"
-      >
-        ${buttonLabel}
-        <typo3-backend-icon identifier="actions-arrow-end-alt" bidi size="small"></typo3-backend-icon>
-      </button>
+      <div>
+        ${resetButtonHtml}
+        <button type="button" class="${classMap({ 'btn': true, 'btn-primary': true, 'disabled': !isComplete })}"
+          @click="${this.handleNext}"
+        >
+          ${buttonLabel}
+          <typo3-backend-icon identifier="actions-arrow-end-alt" bidi size="small"></typo3-backend-icon>
+        </button>
+      </div>
     `;
   }
 
@@ -254,6 +283,7 @@ export class Wizard extends LitElement {
           if (i !== this.currentStepIndex) {
             this.currentStepIndex = i;
             this.currentStep = this.allSteps[i];
+
             await this.updateComplete;
           }
           return;
@@ -263,6 +293,18 @@ export class Wizard extends LitElement {
         if (step.beforeAdvance) {
           await step.beforeAdvance();
         }
+      }
+      const event = new BeforeNextStepEvent(this.currentStep.key, this.currentStepIndex);
+      this.dispatchEvent(event);
+      // If result was attached by a listener wait for result (allows dynamic steps reload)
+      if (event.detail?.result) {
+        const result = event.detail.result;
+
+        if (typeof result === 'object' && typeof (result as Promise<any>).then === 'function') {
+          await result;
+        }
+
+        await this.updateComplete;
       }
     } else {
       // Moving backward: reset all steps after the target
@@ -342,6 +384,11 @@ export class Wizard extends LitElement {
     }
 
     this.goToNextStep();
+  }
+
+  private handleRestart(): void {
+    this.dataStore = {};
+    this.goToStep(0).then(() => this.updateComplete);
   }
 }
 

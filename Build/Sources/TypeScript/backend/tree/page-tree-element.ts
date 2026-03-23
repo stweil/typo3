@@ -35,6 +35,8 @@ import 'bootstrap'; // for data-bs-toggle="dropdown"
 import coreLabels from '~labels/core.core';
 import coreCommonLabels from '~labels/core.common';
 import listLabels from '~labels/core.mod_web_list';
+import backendPagesNewLabels from '~labels/backend.pages_new';
+import { openPageWizardModal } from '@typo3/backend/page-wizard/helper/wizard-helper';
 
 /**
  * This module defines the Custom Element for rendering the navigation component for an editable page tree
@@ -610,6 +612,10 @@ class PageTreeToolbar extends TreeToolbar {
       <div class="tree-toolbar__submenu">
         <div
           class="tree-toolbar__submenu-items ${this.subMenuItemsExpanded ? 'tree-toolbar__submenu-items--expanded' : ''}">
+          <button type="button" class="btn btn-sm btn-primary" @click="${this.launchPageWizard}">
+            <typo3-backend-icon identifier="actions-plus" size="small"></typo3-backend-icon>
+            ${backendPagesNewLabels.get('newPage')}
+          </button>
           ${doktypesHtml}
         </div>
         ${this.hasHiddenSubMenuItems ? html`
@@ -777,6 +783,18 @@ class PageTreeToolbar extends TreeToolbar {
   private toggleSubmenu(e: Event): void {
     e.stopPropagation();
     this.subMenuItemsExpanded = !this.subMenuItemsExpanded;
+  }
+
+  private launchPageWizard() {
+    const selectedNodes = this.tree.getSelectedNodes();
+
+    openPageWizardModal({
+      positionData: {
+        pageUid: parseInt(selectedNodes[0]?.identifier, 10),
+        insertPosition: 'inside'
+      },
+      disablePositionAutoAdvance: true,
+    });
   }
 }
 

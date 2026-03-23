@@ -28,6 +28,7 @@ import coreCommonLabels from '~labels/core.common';
 import cacheLabels from '~labels/core.cache';
 import listLabels from '~labels/core.mod_web_list';
 import layoutLabels from '~labels/backend.layout';
+import { openPageWizardModal } from '@typo3/backend/page-wizard/helper/wizard-helper';
 
 /**
  * @exports @typo3/backend/context-menu-actions
@@ -140,6 +141,16 @@ class ContextMenuActions {
    * Create new records on the same level. Pages are being inserted "inside".
    */
   public static newRecord(table: string, uid: number): void {
+    if (table === 'pages') {
+      openPageWizardModal({
+        positionData: {
+          pageUid: parseInt(String(uid), 10),
+          insertPosition: 'inside'
+        }
+      });
+      return;
+    }
+
     Viewport.ContentContainer.setUrl(
       top.TYPO3.settings.FormEngine.moduleUrl + '&edit[' + table + '][' + (table !== 'pages' ? '-' : '') + uid + ']=new&returnUrl=' + ContextMenuActions.getReturnUrl(),
     );

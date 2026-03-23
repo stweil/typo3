@@ -32,6 +32,8 @@ export class FinisherStep implements WizardStepInterface {
   readonly title = wizardLabels.get('step.finisher.title');
   readonly autoAdvance = false;
 
+  public resetButtonTitle: string = null;
+
   private finisherInstance: FinisherInterface | null = null;
   private hasError = false;
   private readonly task: Task<[SubmissionServiceInterface], FinisherResult>;
@@ -93,6 +95,10 @@ export class FinisherStep implements WizardStepInterface {
         if (result.success === false) {
           this.hasError = true;
           return this.wizard.renderError(wizardLabels.get('wizard.status.error.message'), result.errors);
+        }
+
+        if (result?.finisher?.data?.resetButtonTitle) {
+          this.resetButtonTitle = String(result?.finisher?.data?.resetButtonTitle);
         }
 
         // Load and render the finisher with the result data

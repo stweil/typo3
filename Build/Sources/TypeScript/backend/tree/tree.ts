@@ -11,12 +11,18 @@
  * The TYPO3 project - inspiring people to share!
  */
 
-import { html, LitElement, type TemplateResult, type PropertyValues, nothing } from 'lit';
-import { property, state, query } from 'lit/decorators.js';
+import { html, LitElement, nothing, type PropertyValues, type TemplateResult } from 'lit';
+import { property, query, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
-import { TreeNodeCommandEnum, TreeNodePositionEnum, type TreeNodeInterface, type TreeNodeStatusInformation, type TreeNodeLabel } from './tree-node';
+import {
+  TreeNodeCommandEnum,
+  type TreeNodeInterface,
+  type TreeNodeLabel,
+  TreeNodePositionEnum,
+  type TreeNodeStatusInformation
+} from './tree-node';
 import AjaxRequest from '@typo3/core/ajax/ajax-request';
 import Notification from '../notification';
 import { KeyTypesEnum as KeyTypes } from '../enum/key-types';
@@ -28,6 +34,8 @@ import type { AjaxResponse } from '@typo3/core/ajax/ajax-response';
 import type { DragTooltipMetadata } from '@typo3/backend/drag-tooltip';
 import miscLabels from '~labels/core.misc';
 import layoutLabels from '~labels/backend.layout';
+import { openPageWizardModal } from '@typo3/backend/page-wizard/helper/wizard-helper';
+import type { Position } from '@typo3/backend/tree/page-position-select';
 
 export interface TreeNodeStatus {
   expanded: boolean
@@ -1012,13 +1020,29 @@ export class Tree extends LitElement {
 
     if (event.dataTransfer.types.includes(DataTransferTypes.newTreenode)) {
       event.preventDefault();
-      const targetNode = this.getNodeFromDragEvent(event);
+      let targetNode = this.getNodeFromDragEvent(event);
       if (targetNode === null) {
         return false;
       }
-      const newNodeData = event.dataTransfer.getData(DataTransferTypes.newTreenode);
-      //if (this.nodeDragMode === TreeNodeCommandEnum.NEW) {
-      this.addNode(JSON.parse(newNodeData), targetNode, this.nodeDragPosition);
+      const newNodeData: { doktype: string } = JSON.parse(event.dataTransfer.getData(DataTransferTypes.newTreenode));
+
+      let insertPosition: Position = 'inside';
+      if (this.nodeDragPosition === TreeNodePositionEnum.AFTER) {
+        insertPosition = 'after';
+      } else if (this.nodeDragPosition === TreeNodePositionEnum.BEFORE) {
+        // convert 'before' to 'inside' or 'after'
+        const previousNode = this.getPreviousNode(targetNode);
+        insertPosition = previousNode.depth == targetNode.depth ? 'after' : 'inside';
+        targetNode = previousNode;
+      }
+
+      openPageWizardModal({
+        doktype: String(newNodeData.doktype),
+        positionData: {
+          pageUid: parseInt(targetNode.identifier, 10),
+          insertPosition: insertPosition
+        }
+      });
 
       this.nodeDragMode = null;
       this.nodeDragPosition = null;

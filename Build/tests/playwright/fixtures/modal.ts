@@ -25,13 +25,7 @@ export class Modal {
    */
   async open(locator: Locator): Promise<Locator> {
     await locator.click();
-
-    const iframeLocator = this.page.locator(this.frameSelector);
-    if (await iframeLocator.count() > 0) {
-      return this.page.frameLocator(this.frameSelector).locator('html');
-    }
-
-    return this.page.locator('typo3-backend-modal .t3js-modal-body');
+    return await this.getModalContent();
   }
 
   /**
@@ -46,5 +40,14 @@ export class Modal {
 
     await expect(this.footer.locator(locator)).toBeEnabled();
     await this.footer.locator(locator).click();
+  }
+
+  async getModalContent(): Promise<Locator> {
+    const iframeLocator = this.page.locator(this.frameSelector);
+    if (await iframeLocator.count() > 0) {
+      return this.page.frameLocator(this.frameSelector).locator('html');
+    }
+
+    return this.page.locator('typo3-backend-modal .t3js-modal-body');
   }
 }

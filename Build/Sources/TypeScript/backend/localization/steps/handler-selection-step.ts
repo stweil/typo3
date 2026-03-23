@@ -182,7 +182,7 @@ export class HandlerSelectionStep implements WizardStepInterface, WizardStepValu
         />
         <label class="form-check-label" for="handler-${handler.identifier}">
           <span class="form-check-label-header">
-            <typo3-backend-icon identifier="${handler.iconIdentifier}" size="medium"></typo3-backend-icon>
+            <typo3-backend-icon identifier="${handler.iconIdentifier}" size="small"></typo3-backend-icon>
             ${handler.label}
           </span>
           <span class="form-check-label-body">

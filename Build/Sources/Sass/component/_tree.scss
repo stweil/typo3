@@ -504,6 +504,18 @@ typo3-backend-form-selecttree-toolbar {
 //
 // NEEDS WORK
 //
+.wizard-content:has(typo3-backend-component-page-position-select) {
+    padding: 0 !important;
+    --tree-toolbar-padding: calc(var(--wizard-padding) * .75) var(--wizard-padding);
+}
+
+typo3-backend-component-page-position-select {
+    > typo3-breadcrumb {
+        padding: var(--wizard-padding);
+        padding-bottom: 0;
+    }
+}
+
 .tree-element {
     border: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
     border-radius: var(--typo3-input-border-radius);

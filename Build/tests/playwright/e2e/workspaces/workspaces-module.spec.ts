@@ -1,4 +1,5 @@
 import { test, expect } from '../../fixtures/setup-fixtures';
+import { PageWizard } from '../../fixtures/page-wizard';
 
 test.describe.serial('Workspace Module', () => {
   let testPageTitle: string;
@@ -12,7 +13,9 @@ test.describe.serial('Workspace Module', () => {
     await workspace.ensureLiveWorkspace();
 
     await backend.pageTree.isReady();
-    await backend.pageTree.create(backend.pageTree.root, testPageTitle);
+    await backend.pageTree.dragNewPageTo(backend.pageTree.root);
+    const pageWizard = new PageWizard(page);
+    pageWizard.createDefaultPage(backend.modal, testPageTitle);
     await backend.pageTree.refresh();
     await backend.pageTree.open(testPageTitle);
   });
