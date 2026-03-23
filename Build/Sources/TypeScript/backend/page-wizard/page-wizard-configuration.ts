@@ -16,5 +16,5 @@ import type { PositionData } from '@typo3/backend/page-wizard/steps/position-ste
 export type PageWizardConfiguration = {
   doktype?: string;
   positionData?: PositionData;
-  disablePositionAutoAdvance?: boolean;
+  preventPositionAutoAdvance?: boolean;
 };

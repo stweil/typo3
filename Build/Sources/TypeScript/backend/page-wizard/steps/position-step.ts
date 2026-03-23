@@ -57,7 +57,7 @@ export class PositionStep implements WizardStepInterface, WizardStepValueInterfa
 
   public render(): TemplateResult {
     // Initialize from store if not already set
-    if (this.getValue() == null) {
+    if (this.getValue() === null) {
       const storedValue = this.context.getStoreData(this.key);
       const predefinedPositionData = this.context?.configuration?.positionData ?? null;
       if (storedValue != null) {
@@ -65,7 +65,7 @@ export class PositionStep implements WizardStepInterface, WizardStepValueInterfa
       } else if (predefinedPositionData !== null) {
         this.setValue(predefinedPositionData);
 
-        const preventPositionAutoAdvance = this.context?.configuration?.disablePositionAutoAdvance ?? false;
+        const preventPositionAutoAdvance = this.context?.configuration?.preventPositionAutoAdvance ?? false;
         if (preventPositionAutoAdvance == false && !this.hasDispatchedAutoAdvance) {
           this.hasDispatchedAutoAdvance = true;
           this.context.dispatchAutoAdvance();

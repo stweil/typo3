@@ -793,7 +793,7 @@ class PageTreeToolbar extends TreeToolbar {
         pageUid: parseInt(selectedNodes[0]?.identifier, 10),
         insertPosition: 'inside'
       },
-      disablePositionAutoAdvance: true,
+      preventPositionAutoAdvance: true,
     });
   }
 }

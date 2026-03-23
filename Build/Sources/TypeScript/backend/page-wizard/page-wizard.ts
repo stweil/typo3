@@ -60,7 +60,7 @@ export class PageWizard extends LitElement {
 
     this.context = {
       wizard: this.wizard,
-      configuration: this?.configuration,
+      configuration: this.configuration,
       getStoreData: this.wizard.getStoreData.bind(this.wizard),
       setStoreData: this.wizard.setStoreData.bind(this.wizard),
       clearStoreData: this.wizard.clearStoreData.bind(this.wizard),
@@ -85,12 +85,12 @@ export class PageWizard extends LitElement {
       <typo3-backend-wizard .steps="${this.steps}"
                             .submissionService="${this.submissionService}"
                             confirm-button-label="${backendLayoutLabels.get('newPage')}"
-                            @wizard-before-next-step="${this.onNextStep}"
+                            @wizard-before-next-step="${this.loadDynamicStepsAfterDoktype}"
       ></typo3-backend-wizard>
     `;
   }
 
-  protected onNextStep(event: BeforeNextStepEvent): void {
+  protected loadDynamicStepsAfterDoktype(event: BeforeNextStepEvent): void {
     if (event.detail.currentStepKey !== 'doktype') {
       return;
     }

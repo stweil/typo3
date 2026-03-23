@@ -61,7 +61,7 @@ export class DoktypeStep implements WizardStepInterface, WizardStepValueInterfac
         let warning: TemplateResult | typeof nothing = nothing;
 
         // Initialize from store if not already set
-        if (this.getValue() == null) {
+        if (this.getValue() === null) {
           const storedValue = this.context.getStoreData(this.key);
           const predefinedDoktype = this.context?.configuration?.doktype ?? null;
           if (storedValue != null) {
@@ -114,7 +114,7 @@ export class DoktypeStep implements WizardStepInterface, WizardStepValueInterfac
                   class="form-control form-control-sm search-input"
                   value="${this.searchTerm}"
                   placeholder="${coreLabels.get('tree.searchTermInfo')}"
-                  @input=${(event: InputEvent) => this.handelSearch(event)}
+                  @input=${(event: InputEvent) => this.handleSearch(event)}
                 >
               </div>
             </div>
@@ -186,7 +186,7 @@ export class DoktypeStep implements WizardStepInterface, WizardStepValueInterfac
     }];
   }
 
-  private handelSearch(event: InputEvent): void {
+  private handleSearch(event: InputEvent): void {
     this.searchTerm = (event.target as HTMLInputElement).value;
     this.context.wizard.requestUpdate();
   }
