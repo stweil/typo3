@@ -25,20 +25,24 @@ test('Switch between languages in "Open in new window"', async ({
       // Wait for modal iframe and navigate to full edit view
       const contextPanel = page.frameLocator('iframe[name="modal_frame"]');
       await expect(contextPanel.locator('.contextual-record-edit')).toBeVisible();
+      const formEngineReady = backend.formEngine.formEngineLoaded();
       await contextPanel
         .getByTitle('Open full editing view')
         .click();
 
-      // Now the content frame has the full EditDocumentController
+      // Wait for the EditDocumentController to load in the content frame
+      await formEngineReady;
       await expect(
         backend.contentFrame.getByRole('heading', { name: 'staticdata' }),
       ).toBeVisible();
 
+      const openButton = backend.contentFrame.getByRole('button', { name: 'Open in new window' });
+      await expect(openButton).toBeVisible();
       const futureStandalonePage = page.context().waitForEvent('page');
-      await backend.contentFrame
-        .getByRole('button', { name: 'Open in new window' })
-        .click();
-      return await futureStandalonePage;
+      await openButton.click();
+      const standalonePage = await futureStandalonePage;
+      await standalonePage.waitForLoadState('domcontentloaded');
+      return standalonePage;
     });
 
   try {
@@ -65,6 +69,8 @@ test('Switch between languages in "Open in new window"', async ({
         await standalonePage.getByRole('button', { name: 'Save' }).click();
         await saveResponse;
 
+        // Verify the save persisted and the form re-rendered before switching languages
+        await expect(standalonePage.getByLabel('Page Title')).toHaveValue('changed language staticdata');
         await expect(languageButton).toContainText('styleguide demo language');
       });
     });

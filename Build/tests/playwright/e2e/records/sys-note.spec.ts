@@ -8,8 +8,9 @@ test('System note can be created and edited from records module', async ({ backe
   await test.step('Create a new system note', async () => {
     await backend.pageTree.open('styleguide TCA demo');
     await backend.contentFrame.getByRole('button', { name: 'Create new record' }).click();
-    await backend.formEngine.formEngineLoaded();
+    const formEngineReady = backend.formEngine.formEngineLoaded();
     await backend.contentFrame.getByRole('link', { name: 'Internal note' }).click();
+    await formEngineReady;
 
     await expect(backend.contentFrame.locator('h1')).toContainText('Create new Internal note');
     await backend.contentFrame.getByText('[subject]').fill('new sys_note');

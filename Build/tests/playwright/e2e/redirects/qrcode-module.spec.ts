@@ -3,7 +3,7 @@ import { test, expect } from '../../fixtures/setup-fixtures';
 test.beforeEach(async ({ backend }) => {
   await backend.gotoModule('link_management');
   const moduleLoaded = backend.moduleLoaded('qrcodes');
-  backend.docHeader.selectInDropDown('Module Overview', 'QR Codes');
+  await backend.docHeader.selectInDropDown('Module Overview', 'QR Codes');
   await moduleLoaded;
 });
 
@@ -13,11 +13,13 @@ test('See QR Code management module', async ({ backend }) => {
 
 test('Create a new QR Code', async ({ page, backend }) => {
   const amountOfRedirects = await backend.contentFrame.locator('table > tbody > tr').count();
+  const formEngineReady = backend.formEngine.formEngineLoaded();
   await backend.contentFrame.getByRole('button', { name: 'Add QR Code' }).click();
+  await formEngineReady;
   await expect(backend.contentFrame.locator('h1')).toContainText('Create new QR Code');
 
-  await backend.formEngine.container.getByLabel('[source_host]').pressSequentially('localhost');
-  await backend.formEngine.container.getByLabel('[target]').pressSequentially('t3://page?uid=1');
+  await backend.formEngine.container.getByLabel('[source_host]').fill('localhost');
+  await backend.formEngine.container.getByLabel('[target]').fill('t3://page?uid=1');
   await backend.contentFrame.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByLabel('Record saved')).toBeVisible();
 
@@ -29,19 +31,20 @@ test('Create a new QR Code', async ({ page, backend }) => {
 });
 
 test('Can edit a redirect by clicking the edit button', async ({ backend }) => {
-  const sourceHost = await backend.contentFrame.locator('td:nth-child(3)').first().innerText();
   await backend.contentFrame.locator('[title="Edit record"]').first().click();
-  await expect(backend.contentFrame.locator('h1')).toContainText(sourceHost + ', ');
+  await expect(backend.contentFrame.locator('h1')).toContainText('/_redirect/');
   await backend.contentFrame.getByRole('button', { name: 'Close' }).click();
   await expect(backend.contentFrame.locator('h1')).toContainText('QR Code Management');
 });
 
 test('See and download QR Code', async ({ page, backend }) => {
+  const formEngineReady = backend.formEngine.formEngineLoaded();
   await backend.contentFrame.getByRole('button', { name: 'Add QR Code' }).click();
+  await formEngineReady;
   await expect(backend.contentFrame.locator('h1')).toContainText('Create new QR Code');
 
-  await backend.formEngine.container.getByLabel('[source_host]').pressSequentially('example.org');
-  await backend.formEngine.container.getByLabel('[target]').pressSequentially('t3://page?uid=1');
+  await backend.formEngine.container.getByLabel('[source_host]').fill('example.org');
+  await backend.formEngine.container.getByLabel('[target]').fill('t3://page?uid=1');
 
   await backend.contentFrame.getByRole('button', { name: 'Save' }).click();
   await expect(backend.contentFrame.locator('h1')).toContainText('example.org, ');

@@ -74,13 +74,28 @@ test('Delete page and check recycler', async ({ page, backend }) => {
     });
 
     await test.step('Restore deleted page and the content', async () => {
-      const restoreButton = backend.contentFrame.getByRole('button', { name: 'Restore' }).first();
+      const searchBox = backend.contentFrame.getByRole('searchbox', { name: 'Search term' });
+      await searchBox.fill(newPageTitle);
+      const searchResponse = page.waitForResponse(response =>
+        response.url().includes('getDeletedRecords') && response.status() === 200
+      );
+      await backend.contentFrame.getByRole('button', { name: 'Search' }).click();
+      await searchResponse;
+      await expect(backend.contentFrame.getByRole('cell', { name: newPageTitle }).first()).toBeVisible();
+
+      // Target the restore button on the pages row specifically,
+      // since the recursive checkbox only appears for page records.
+      const pageRow = backend.contentFrame.locator('tr[data-table="pages"]').first();
+      await expect(pageRow).toBeVisible();
+      const restoreButton = pageRow.getByRole('button', { name: 'Restore' });
       await backend.modal.open(restoreButton);
 
       const modal = page.locator('typo3-backend-modal > dialog');
       await expect(modal).toBeVisible();
       await expect(modal).toContainText('Restore records');
-      await modal.getByRole('checkbox', { name: 'Restore content and subpages' }).click();
+      const restoreCheckbox = modal.getByRole('checkbox', { name: 'Restore content and subpages recursively' });
+      await expect(restoreCheckbox).toBeVisible();
+      await restoreCheckbox.click();
 
       await backend.modal.click({ text: 'Restore' });
     });

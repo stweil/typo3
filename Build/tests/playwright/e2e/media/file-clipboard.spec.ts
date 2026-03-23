@@ -82,33 +82,27 @@ test.describe('Media Clipboard', () => {
     const expectedFiles = ['bus_lane.jpg', 'telephone_box.jpg', 'underground.jpg'];
 
     await test.step('Navigate to styleguide folder', async () => {
-      await backend.contentFrame.getByText('View', { exact: true }).click();
+      await backend.contentFrame.getByText(' View', { exact: false }).click();
       await backend.contentFrame.getByText('List', { exact: true }).click();
-      const moduleLoaded = backend.waitForModuleResponse();
-      await backend.contentFrame.getByRole('button', { name: 'styleguide', exact: true }).click();
-      await moduleLoaded;
+      const folder = await backend.fileTree.open('fileadmin', 'styleguide');
+      await folder.click();
+      await backend.fileTree.isReady();
+      await expect(backend.contentFrame.getByRole('row', { name: 'bus_lane.jpg' })).toBeVisible();
     });
 
     await test.step('Add multiple files to clipboard', async () => {
-      // Mark iframe content as old to detect reload
-      await page.evaluate(() => {
-        const iframe = document.querySelector('#typo3-contentIframe') as HTMLIFrameElement;
-        if (iframe?.contentDocument) {
-          (iframe.contentDocument as any).cestIsOldPage = true;
-        }
-      });
-
-      // Click to switch to multi-selection mode (reloads iframe)
+      // Click to switch to multi-selection mode (reloads iframe).
       await backend.contentFrame.getByRole('button', { name: 'Clipboard #1 (multi-selection' }).click();
 
-      // Wait for iframe to reload (cestIsOldPage should be gone)
+      // Wait for the iframe to reload with multi-selection mode content.
+      // Check the iframe DOM directly to avoid stale frameLocator references.
       await page.waitForFunction(() => {
         const iframe = document.querySelector('#typo3-contentIframe') as HTMLIFrameElement;
-        return iframe?.contentDocument && !('cestIsOldPage' in iframe.contentDocument);
+        if (!iframe?.contentDocument) {
+          return false;
+        }
+        return iframe.contentDocument.querySelector('[data-multi-record-selection-action="copyMarked"]') !== null;
       });
-
-      // Wait for multi-selection mode to be ready
-      await expect(backend.contentFrame.getByText('Clipboard #1 (multi-selection mode)')).toBeVisible();
 
       // Open multi-selection actions dropdown
       await backend.contentFrame.getByRole('button', { name: 'Open selection options' }).click();
@@ -121,9 +115,9 @@ test.describe('Media Clipboard', () => {
       await selectionDropdown.getByRole('button', { name: 'Check all', exact: true }).click();
 
       // Copy marked files to clipboard
-      const moduleResponse = backend.waitForModuleResponse();
-      await backend.contentFrame.getByRole('button', { name: 'Transfer to clipboard' }).click();
-      await moduleResponse;
+      const transferResponse = backend.waitForModuleResponse();
+      await backend.contentFrame.locator('[data-multi-record-selection-action="copyMarked"]').click();
+      await transferResponse;
 
       // Verify all files are in clipboard
       const clipboardPanel = backend.contentFrame.locator('[data-clipboard-panel]');

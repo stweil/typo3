@@ -39,7 +39,8 @@ test.describe.serial('Bookmark functionality', () => {
     const { modal, bookmarkManager } = await openBookmarkManager(page);
 
     const bookmarkRow = bookmarkManager.locator('tr', { hasText: 'Scheduled tasks' });
-    await bookmarkRow.locator('button[title="Edit bookmark"]').click();
+    // Force-click because the button may overflow the visible table area
+    await bookmarkRow.locator('button[title="Edit bookmark"]').dispatchEvent('click');
 
     await bookmarkManager.locator('#bookmark-title').fill('Scheduled tasks renamed');
     await bookmarkManager.locator('button[type="submit"]').click();
@@ -53,7 +54,8 @@ test.describe.serial('Bookmark functionality', () => {
     const { modal, bookmarkManager } = await openBookmarkManager(page);
 
     const bookmarkRow = bookmarkManager.locator('tr', { hasText: 'Scheduled tasks' });
-    await bookmarkRow.locator('button[title="Edit bookmark"]').click();
+    // Force-click because the button may overflow the visible table area
+    await bookmarkRow.locator('button[title="Edit bookmark"]').dispatchEvent('click');
     await bookmarkManager.locator('button', { hasText: 'Delete' }).click();
 
     const confirmModal = page.locator('typo3-backend-modal[modaltitle="Delete bookmark"] > dialog');

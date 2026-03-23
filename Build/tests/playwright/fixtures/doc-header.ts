@@ -14,14 +14,14 @@ export class DocHeader {
   }
 
   async selectInDropDown(triggerName: string, option: string): Promise<void> {
-    // Open dropdown
     const triggerButton = this.container.getByRole('button', { name: triggerName });
-    await expect(triggerButton).toBeVisible();
-    await triggerButton.click();
-
-    // Wait for dropdown menu to be visible
     const dropdownMenu = this.container.locator('.dropdown-menu:popover-open');
-    await expect(dropdownMenu).toBeVisible();
+
+    // Click and retry until popover opens (JS may not be ready on first click)
+    await expect(async () => {
+      await triggerButton.click();
+      await expect(dropdownMenu).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 10000 });
 
     // Select dropdown item using title attribute for precise matching
     // Use force:true since we've verified visibility and the element can detach during navigation
@@ -34,14 +34,14 @@ export class DocHeader {
   }
 
   async selectItemInDropDownByIndex(triggerName: string | RegExp, index: number = 0): Promise<void> {
-    // Open dropdown
     const triggerButton = this.container.getByRole('button', { name: triggerName });
-    await expect(triggerButton).toBeVisible();
-    await triggerButton.click();
-
-    // Wait for dropdown menu to be visible
     const dropdownMenu = this.container.locator('.dropdown-menu:popover-open');
-    await expect(dropdownMenu).toBeVisible();
+
+    // Click and retry until popover opens (JS may not be ready on first click)
+    await expect(async () => {
+      await triggerButton.click();
+      await expect(dropdownMenu).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 10000 });
 
     // Select dropdown item
     const optionButton = dropdownMenu.locator('.dropdown-item').nth(index);
@@ -53,14 +53,17 @@ export class DocHeader {
   }
 
   async countItemsInDropDown(triggerName: string | RegExp): Promise<number> {
-    // Open dropdown
     const triggerButton = this.container.getByRole('button', { name: triggerName });
-    await expect(triggerButton).toBeVisible();
-    await triggerButton.click();
+    const dropdownMenu = this.container.locator('.dropdown-menu:popover-open');
+
+    // Click and retry until popover opens (JS may not be ready on first click)
+    await expect(async () => {
+      await triggerButton.click();
+      await expect(dropdownMenu).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 10000 });
 
     // Count dropdown items
-    const optionButtons = this.container.locator('.dropdown-menu:popover-open .dropdown-item');
-    const count = await optionButtons.count();
+    const count = await dropdownMenu.locator('.dropdown-item').count();
 
     // Close dropdown again to be in a stable state
     await triggerButton.click();
