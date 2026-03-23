@@ -52,22 +52,22 @@ export class PageTree extends Tree
     return this.settings.dataUrl + '&parent=' + parentNode.identifier + '&mount=' + parentNode.mountPoint + '&depth=' + parentNode.depth;
   }
 
-  public ensureActiveNodeLoaded(pageUid?: number): void {
+  public ensureActiveNodeLoaded(pageUid?: number): Promise<void> {
     if (!pageUid) {
-      return;
+      return Promise.resolve();
     }
 
     if (this.nodes.find((node: TreeNodeInterface) => node.checked)) {
-      return;
+      return Promise.resolve();
     }
 
-    new AjaxRequest(TYPO3.settings.ajaxUrls.page_tree_rootline).withQueryArguments({ identifier: pageUid }).get({ cache: 'no-cache' })
+    return new AjaxRequest(TYPO3.settings.ajaxUrls.page_tree_rootline).withQueryArguments({ identifier: pageUid }).get({ cache: 'no-cache' })
       .then(response => response.resolve())
       .then((data: { rootline: string[] }) => {
         const { rootline } = data;
         rootline.pop();
 
-        this.expandParents(rootline);
+        return this.expandParents(rootline);
       });
   }
 

@@ -29,7 +29,7 @@ import type { DragTooltipMetadata } from '@typo3/backend/drag-tooltip';
 import miscLabels from '~labels/core.misc';
 import layoutLabels from '~labels/backend.layout';
 
-interface TreeNodeStatus {
+export interface TreeNodeStatus {
   expanded: boolean
 }
 
@@ -357,6 +357,19 @@ export class Tree extends LitElement {
     }
   }
 
+  public scrollNodeIntoViewIfNeeded(node: TreeNodeInterface): void {
+    // scrollIntoViewIfNeeded may fail due to race conditions or because the node element might not be
+    // queryable; use Y-coordinate ensures correct scrolling
+    const nodeTop = node.__y + (this.nodeHeight / 2);
+    const viewTop = this.root.scrollTop;
+    const viewBottom = viewTop + this.root.clientHeight;
+    const target = nodeTop - this.root.clientHeight / 2;
+
+    if (nodeTop < viewTop || nodeTop > viewBottom) {
+      this.root.scrollTop = target;
+    }
+  }
+
   public async deleteNode(node: TreeNodeInterface): Promise<void> {
     if (!node.deletable) {
       console.error('The Node cannot be deleted.');
@@ -389,8 +402,16 @@ export class Tree extends LitElement {
       }
     }
 
-    if (position === TreeNodePositionEnum.INSIDE || position === TreeNodePositionEnum.AFTER) {
-      index++;
+    if (position === TreeNodePositionEnum.INSIDE) {
+      index += 1;
+    } else if (position === TreeNodePositionEnum.AFTER) {
+      const depth = target.depth;
+      let i = index + 1;
+      while (i < this.nodes.length && this.nodes[i].depth > depth) {
+        i++;
+      }
+
+      index = i;
     }
 
     this.nodeMap.splice(index, 0, newNode);
@@ -405,7 +426,7 @@ export class Tree extends LitElement {
     }
     this.requestUpdate();
     this.updateComplete.then(() => {
-      if (parentNode.__expanded && parentNode.hasChildren && this.getNodeChildren(parentNode).length === 0) {
+      if (parentNode?.__expanded && parentNode.hasChildren && this.getNodeChildren(parentNode).length === 0) {
         parentNode.hasChildren = false;
         parentNode.__expanded = false;
       }
@@ -559,7 +580,7 @@ export class Tree extends LitElement {
    */
   protected enhanceNodes(nodes: TreeNodeInterface[]): TreeNodeInterface[] {
     const enhancedNodes = nodes.reduce((nodes: TreeNodeInterface[], node: TreeNodeInterface) => {
-      if (node.__processed === true) {
+      if (node?.__processed === true) {
         return [...nodes, node];
       }
 
@@ -1305,7 +1326,7 @@ export class Tree extends LitElement {
 
   protected getNodeLabels(node: TreeNodeInterface): TreeNodeLabel[] {
     let labels = node.labels;
-    if (labels.length > 0) {
+    if (labels?.length > 0) {
       labels = labels.sort((a, b) => {
         return b.priority - a.priority;
       });
@@ -1323,7 +1344,7 @@ export class Tree extends LitElement {
   }
 
   protected getNodeStatusInformation(node: TreeNodeInterface): TreeNodeStatusInformation[] {
-    if (node.statusInformation.length === 0) {
+    if (!node.statusInformation?.length) {
       return [];
     }
 
@@ -1352,7 +1373,7 @@ export class Tree extends LitElement {
   }
 
   protected getNodeChildren(node: TreeNodeInterface): TreeNodeInterface[] {
-    if (!node.hasChildren) {
+    if (!node?.hasChildren) {
       return [];
     }
 
