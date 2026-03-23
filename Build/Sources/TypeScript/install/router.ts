@@ -28,7 +28,7 @@ import '@typo3/backend/element/sidebar-toggle-element';
 
 class Router {
   private readonly rootSelector: string = '.t3js-body';
-  private readonly contentSelector: string = '.t3js-module-body';
+  private readonly contentSelector: string = '.t3js-module-body-container';
 
   private rootContainer: HTMLElement;
   private controller: string;

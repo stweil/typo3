@@ -1,8 +1,7 @@
 //
 // User settings
 //
-#SetupModuleController .form-section > .form-group {
-    @include media-breakpoint-up('lg') {
-        width: 50%;
-    }
+#SetupModuleController .form-section .form-control-wrap {
+    // Matches formMaxWidth(50) from AbstractFormElement (max input width)
+    max-width: 804px;
 }

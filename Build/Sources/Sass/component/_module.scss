@@ -10,6 +10,9 @@
 :root {
     --module-color: var(--typo3-text-color-base);
     --module-bg: var(--typo3-surface-container-lowest);
+    --module-width: auto;
+    --module-layout-wide-width: auto;
+    --module-layout-normal-width: 1320px;
     --module-docheader-zindex: var(--typo3-zindex-header);
     --module-docheader-padding-y: .75rem;
     --module-docheader-padding-x: 1.5rem;
@@ -54,6 +57,14 @@ body:has(.module) *:target {
     body > & {
         min-height: 100dvh;
     }
+}
+
+.module-layout-wide {
+    --module-width: var(--module-layout-wide-width);
+}
+
+.module-layout-normal {
+    --module-width: var(--module-layout-normal-width);
 }
 
 //
@@ -107,6 +118,9 @@ body:has(.module) *:target {
         display: flex;
         gap: var(--module-docheader-spacing);
         flex-wrap: wrap;
+        width: 100%;
+        max-width: var(--module-width);
+        margin: 0 auto;
     }
 
     .dropdown-menu {
@@ -174,4 +188,10 @@ body:has(.module) *:target {
     > *:last-child {
         margin-bottom: 0;
     }
+}
+
+.module-body-container {
+    width: 100%;
+    max-width: var(--module-width);
+    margin: 0 auto;
 }
