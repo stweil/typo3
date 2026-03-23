@@ -612,7 +612,7 @@ class PageTreeToolbar extends TreeToolbar {
       <div class="tree-toolbar__submenu">
         <div
           class="tree-toolbar__submenu-items ${this.subMenuItemsExpanded ? 'tree-toolbar__submenu-items--expanded' : ''}">
-          <button type="button" class="btn btn-sm btn-primary" @click="${this.launchPageWizard}">
+          <button type="button" class="btn btn-sm btn-default" @click="${this.launchPageWizard}">
             <typo3-backend-icon identifier="actions-plus" size="small"></typo3-backend-icon>
             ${backendPagesNewLabels.get('newPage')}
           </button>
