@@ -120,38 +120,6 @@
 //
 
 //
-// Fixed Sizes
-//
-// .card-size-fixed-small      - Small
-//
-// Markup:
-// <div class="card $modifierClass">
-//     <div class="card-image">
-//         <img src="http://via.placeholder.com/300x225" height="225" width="300">
-//     </div>
-//     <div class="card-header">
-//         <h1 class="card-title">The official Introduction Package</h1>
-//         <span class="card-subtitle">introduction</span>
-//     </div>
-//     <div class="card-body">
-//         <p class="card-text">
-//             This package delivers a new website (page tree) and shows all out-of-the-box features of TYPO3, and includes a theme based on Twitter Bootstrap 3, and...
-//         </p>
-//     </div>
-//     <div class="card-footer">
-//         <a class="btn btn-default" href="#">
-//             Install
-//         </a>
-//         <a class="btn btn-link" href="#">
-//             Show Details
-//         </a>
-//     </div>
-// </div>
-//
-// Styleguide component.card.3
-//
-
-//
 // Collection
 //
 // The card container groups multiple card elements and ensures that these elements always share
@@ -233,70 +201,46 @@
 
 .card-container {
     container-type: inline-size;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--typo3-card-grid-gap) 0;
-    margin-left: calc(var(--typo3-card-grid-gap) / 2 * -1);
-    margin-right: calc(var(--typo3-card-grid-gap) / 2 * -1);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--typo3-card-grid-gap);
     margin-bottom: var(--typo3-spacing);
 
     .card {
-        margin-left: calc(var(--typo3-card-grid-gap) / 2);
-        margin-right: calc(var(--typo3-card-grid-gap) / 2);
         margin-bottom: 0;
+    }
+}
+
+@include container-breakpoint-up('md') {
+    .card-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@include container-breakpoint-up('xl') {
+    .card-container {
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
 //
 // Sizes
 //
-.card-size-small,
-.card-size-medium,
-.card-size-large {
-    width: calc(100% - var(--typo3-card-grid-gap));
-}
-
-//
-// Small
-//
-@include container-breakpoint-up('md') {
-    .card-size-small {
-        width: calc(50% - var(--typo3-card-grid-gap));
-    }
-}
-
-@include container-breakpoint-up('lg') {
-    .card-size-small {
-        width: calc(25% - var(--typo3-card-grid-gap));
-    }
-}
 
 //
 // Medium
 //
-@include container-breakpoint-up('md') {
+@include container-breakpoint-up('lg') {
     .card-size-medium {
-        width: calc(50% - var(--typo3-card-grid-gap));
+        grid-column: span 2;
     }
 }
 
 //
-// Fixed sizes
+// Large
 //
-.card-size-fixed-small {
-    width: calc(100% - var(--typo3-card-grid-gap));
-}
-
-@include container-breakpoint-up('sm') {
-    .card-size-fixed-small {
-        width: calc(50% - var(--typo3-card-grid-gap));
-    }
-}
-
-@include container-breakpoint-up('md') {
-    .card-size-fixed-small {
-        width: 300px;
-    }
+.card-size-large {
+    grid-column: 1 / -1;
 }
 
 //
