@@ -173,7 +173,7 @@ export class DoktypeStep implements WizardStepInterface, WizardStepValueInterfac
           </div>
         `;
       },
-      error: (error: unknown) => this.context.wizard.renderError('something went wrong...', error),
+      error: (error: unknown) => this.context.wizard.renderError(labels.get('step.doktype.load_error'), error),
       pending: () => this.context.wizard.renderLoader()
     });
   }
@@ -225,16 +225,11 @@ export class DoktypeStep implements WizardStepInterface, WizardStepValueInterfac
   private initDoktypesTask(): void {
     this.task = new Task(this.context.wizard, {
       task: async (): Promise<Doktype[]> => {
-        try {
-          const response = await new AjaxRequest(TYPO3.settings.ajaxUrls.wizard_page_get_doktypes)
-            .withQueryArguments({ data: this.context.getDataStore() })
-            .get();
+        const response = await new AjaxRequest(TYPO3.settings.ajaxUrls.wizard_page_get_doktypes)
+          .withQueryArguments({ data: this.context.getDataStore() })
+          .get();
 
-          return await response.resolve();
-        } catch (error) {
-          console.warn('Failed to fetch doktypes:', error);
-          return [];
-        }
+        return await response.resolve();
       },
       autoRun: false
     });

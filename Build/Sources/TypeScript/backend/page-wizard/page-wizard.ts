@@ -16,6 +16,7 @@ import type { SubmissionServiceInterface } from '@typo3/backend/wizard/finisher/
 import type { WizardStepInterface } from '@typo3/backend/wizard/steps/wizard-step-interface';
 import type { DataStore, Wizard } from '@typo3/backend/wizard/wizard';
 import backendLayoutLabels from '~labels/backend.layout';
+import wizardLabels from '~labels/backend.wizards.general';
 import DoktypeStep from '@typo3/backend/page-wizard/steps/doktype-step';
 import { AutoAdvanceEvent } from '@typo3/backend/wizard/events/auto-advance-event';
 import PositionStep, { type PositionData } from '@typo3/backend/page-wizard/steps/position-step';
@@ -100,6 +101,8 @@ export class PageWizard extends LitElement {
         ...this.fixedSteps,
         ...dynamicSteps
       ];
+    }).catch(error => {
+      this.wizard.renderError(wizardLabels.get('wizard.status.error.message'), error);
     });
   }
 }

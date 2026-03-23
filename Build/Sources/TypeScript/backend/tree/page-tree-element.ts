@@ -587,12 +587,17 @@ class PageTreeToolbar extends TreeToolbar {
     `;
   }
 
-  protected renderToolbarSubmenu(): TemplateResult | typeof nothing {
-    let doktypesHtml: TemplateResult | typeof nothing;
-    if (!this.tree?.settings?.doktypes?.length) {
-      doktypesHtml = nothing;
-    } else {
-      doktypesHtml = this.tree.settings.doktypes.map((item: any) => {
+  protected renderToolbarSubmenu(): TemplateResult {
+    const toolbarItemsHtml: TemplateResult[] = [];
+    if (this.tree?.settings?.doktypes?.length) {
+      toolbarItemsHtml.push( html`
+        <button type="button" class="btn btn-sm btn-default" @click="${this.launchPageWizard}">
+          <typo3-backend-icon identifier="actions-plus" size="small"></typo3-backend-icon>
+          ${backendPagesNewLabels.get('newPage')}
+        </button>
+      `);
+
+      toolbarItemsHtml.push(this.tree.settings.doktypes.map((item: any) => {
         return html `<div
           class="tree-toolbar__menuitem tree-toolbar__drag-node"
           title="${item.title}"
@@ -605,18 +610,14 @@ class PageTreeToolbar extends TreeToolbar {
           <typo3-backend-icon identifier="${item.icon}" size="small"></typo3-backend-icon>
         </div>
         `;
-      });
+      }));
     }
 
     return html`
       <div class="tree-toolbar__submenu">
         <div
           class="tree-toolbar__submenu-items ${this.subMenuItemsExpanded ? 'tree-toolbar__submenu-items--expanded' : ''}">
-          <button type="button" class="btn btn-sm btn-default" @click="${this.launchPageWizard}">
-            <typo3-backend-icon identifier="actions-plus" size="small"></typo3-backend-icon>
-            ${backendPagesNewLabels.get('newPage')}
-          </button>
-          ${doktypesHtml}
+          ${toolbarItemsHtml}
         </div>
         ${this.hasHiddenSubMenuItems ? html`
           <button

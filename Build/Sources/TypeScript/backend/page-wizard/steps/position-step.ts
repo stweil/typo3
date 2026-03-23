@@ -122,7 +122,7 @@ export class PositionStep implements WizardStepInterface, WizardStepValueInterfa
           ${page.title} <code>[pages:${page.uid}]</code>
         `;
       },
-      error: () => html`<typo3-backend-icon identifier="default-not-found" size="small"></typo3-backend-icon>`,
+      error: () => this.context.wizard.renderError(labels.get('pageSelectPositionError')),
       pending: () => this.context.wizard.renderLoader()
     });
 
