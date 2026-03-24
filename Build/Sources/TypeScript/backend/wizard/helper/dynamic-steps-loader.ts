@@ -1,16 +1,31 @@
 import type { WizardStepInterface } from '@typo3/backend/wizard/steps/wizard-step-interface';
 import AjaxRequest from '@typo3/core/ajax/ajax-request';
 import type { AjaxResponse } from '@typo3/core/ajax/ajax-response';
+import type { JavaScriptItemPayload } from '@typo3/core/java-script-item-processor';
+
+export type DynamicWizardStepConfigurationData = {
+  html?: string;
+  key: string;
+  title: string;
+  modules?: JavaScriptItemPayload[];
+  labels?: Record<string, string>;
+};
 
 type WizardConfiguration = {
   steps: {
     module: string;
-    configurationData?: {
-      html?: string;
-      key: string;
-      title: string;
-    }[];
+    configurationData?: DynamicWizardStepConfigurationData
   }[];
+};
+
+interface WizardContextInterface {
+  getDataStore: () => Readonly<object>;
+}
+
+type WizardStepModule = {
+  default: {
+    new(context: WizardContextInterface, configuration: DynamicWizardStepConfigurationData): WizardStepInterface
+  }
 };
 
 /**
@@ -24,29 +39,22 @@ type WizardConfiguration = {
  *    - Instantiates the step class and merges the context and step-specific configuration.
  * 4. Returns a Promise that resolves with an array of fully initialized WizardStepInterface instances.
  */
-export function loadDynamicSteps(wizardType: string, context: any): Promise<WizardStepInterface[]> {
+export function loadDynamicSteps(wizardType: string, context: WizardContextInterface): Promise<WizardStepInterface[]> {
   return new AjaxRequest(TYPO3.settings.ajaxUrls.wizard_config).withQueryArguments({ mode: wizardType, data: context.getDataStore() }).get()
     .then((response: AjaxResponse) => response.resolve())
     .then(async (config: WizardConfiguration ) => {
-      return await Promise.all(config.steps.map(async (step) =>{
+      return await Promise.all(config.steps.map(async (step) => {
         if (!step.module) {
           throw new Error('Step data does not contain a module path');
         }
 
-        const module = await import(step.module);
-        const StepClass = module.default as { new(): WizardStepInterface };
+        const { default: StepClass } = await import(step.module) as WizardStepModule;
 
         if (!StepClass) {
           throw new Error(`Step module ${step.module} does not export a default class`);
         }
 
-        const stepInstance = new StepClass();
-        Object.assign(stepInstance, {
-          context: context,
-          ...step.configurationData
-        });
-
-        return stepInstance;
+        return new StepClass(context, step.configurationData);
       }));
     });
 }

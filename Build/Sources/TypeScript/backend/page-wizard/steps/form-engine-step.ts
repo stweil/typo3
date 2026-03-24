@@ -21,16 +21,28 @@ import type { SummaryItem } from '@typo3/backend/wizard/steps/summary-item-inter
 import { executeJavaScriptModuleInstruction, type JavaScriptItemPayload } from '@typo3/core/java-script-item-processor';
 import type { WizardStepAfterRenderInterface } from '@typo3/backend/wizard/steps/wizard-step-after-render-interface';
 import AjaxRequest from '@typo3/core/ajax/ajax-request';
+import type { DynamicWizardStepConfigurationData } from '@typo3/backend/wizard/helper/dynamic-steps-loader';
 
 export class FormEngineStep implements WizardStepInterface, WizardStepAfterRenderInterface {
   autoAdvance = false;
   key = '';
   title = '';
-  html: '';
-  context: PageWizardContext = null;
+  html: string = '';
   modules: JavaScriptItemPayload[] = [];
   labels: Record<string, string> = {};
+
   private summaryTask: Task<[fields: Record<string, string>, uid: number], Record<string, string>> = null;
+
+  constructor(
+    private readonly context: PageWizardContext,
+    configuration: DynamicWizardStepConfigurationData
+  ) {
+    this.key = configuration.key;
+    this.title = configuration.title;
+    this.html = configuration.html;
+    this.modules = configuration.modules;
+    this.labels = configuration.labels;
+  }
 
   public getValue(): Record<string, any> | null {
     const form = this.context.wizard.querySelector('form[name="editform"]') as HTMLFormElement;
