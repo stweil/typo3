@@ -67,12 +67,6 @@ parameters:
 			path: ../../typo3/sysext/core/Classes/DataHandling/DataHandler.php
 
 		-
-			message: '#^Call to function is_array\(\) with array\{mixed\} will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: ../../typo3/sysext/core/Classes/DataHandling/DataHandler.php
-
-		-
 			message: '#^Negated boolean expression is always true\.$#'
 			identifier: booleanNot.alwaysTrue
 			count: 1
@@ -269,12 +263,6 @@ parameters:
 			identifier: arrayValues.list
 			count: 1
 			path: ../../typo3/sysext/core/Classes/Utility/GeneralUtility.php
-
-		-
-			message: '#^Offset non\-empty\-string on array\{\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: ../../typo3/sysext/extbase/Classes/Mvc/Controller/MvcPropertyMappingConfigurationService.php
 
 		-
 			message: '#^Call to an undefined method TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Qom\\JoinConditionInterface\:\:getProperty1Name\(\)\.$#'
