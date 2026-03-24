@@ -432,17 +432,17 @@ export default (function() {
     return $(FormEngine.formElement.elements.namedItem(fieldName));
   };
 
+  FormEngine.delegatesInitialized = false;
+
   /**
-   * Initialize events for all form engine relevant tasks.
+   * Initialize global event delegates for all form engine relevant tasks.
    * This function only needs to be called once on page load,
    * as it using deferrer methods only
    */
-  FormEngine.initializeEvents = function() {
-    if (top.TYPO3 && typeof top.TYPO3.Backend !== 'undefined') {
-      top.TYPO3.Backend.consumerScope.attach(FormEngine);
-      window.addEventListener('pagehide', () => top.TYPO3.Backend.consumerScope.detach(FormEngine), { once: true });
+  FormEngine.initializeDelegates = function() {
+    if (FormEngine.delegatesInitialized) {
+      return;
     }
-
     new RegularEvent('click', (e: Event): void => {
       e.preventDefault();
       FormEngine.preventExitIfNotSaved(
@@ -503,6 +503,23 @@ export default (function() {
       FormEngine.processOnFieldChange(items, evt);
     }).delegateTo(document, '[data-formengine-field-change-event="change"]');
 
+    window.addEventListener('message', FormEngine.handlePostMessage);
+
+    FormEngine.delegatesInitialized = true;
+  };
+
+  /**
+   * Initialize events for all form engine relevant tasks.
+   */
+  FormEngine.initializeEvents = function() {
+    if (top.TYPO3 && typeof top.TYPO3.Backend !== 'undefined') {
+      // @todo: The consumer scope attachment is actually not needed
+      // in page wizard and context panel (which currently uses it own handling).
+      // This needs to be streamlined.
+      top.TYPO3.Backend.consumerScope.attach(FormEngine);
+      window.addEventListener('pagehide', () => top.TYPO3.Backend.consumerScope.detach(FormEngine), { once: true });
+    }
+
     FormEngine.formElement.addEventListener('submit', function(e: SubmitEvent) {
       const form = e.target as HTMLFormElement;
       const submitterName = (e.submitter as HTMLInputElement | HTMLButtonElement | null)?.name ?? '';
@@ -519,7 +536,6 @@ export default (function() {
       }
     }, { capture: true });
 
-    window.addEventListener('message', FormEngine.handlePostMessage);
   };
 
   FormEngine.consume = function(interactionRequest: TriggerRequest): Promise<void> {
@@ -1375,6 +1391,7 @@ export default (function() {
   FormEngine.initialize = function(browserUrl: string): void {
     FormEngine.browserUrl = browserUrl;
 
+    FormEngine.initializeDelegates();
     DocumentService.ready().then((): void => {
       FormEngine.initializeEvents();
       FormEngine.Validation.initialize(this);
