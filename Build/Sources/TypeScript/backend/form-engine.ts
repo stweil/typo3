@@ -38,6 +38,7 @@ import Hotkeys, { ModifierKeys } from '@typo3/backend/hotkeys';
 import RegularEvent from '@typo3/core/event/regular-event';
 import backendAltDocLabels from '~labels/backend.alt_doc';
 import coreCoreLabels from '~labels/core.core';
+import type { ElementBrowserMessage, ElementBrowserElementAddedMessage } from '@typo3/backend/element-browser';
 
 export interface OnFieldChangeItem {
   name: string;
@@ -205,7 +206,8 @@ export default (function() {
     allowedTypes: string,
     disallowedTypes: string,
     irreObjectId: string,
-    entryPoint: string
+    entryPoint: string,
+    useEvents: false,
   ): ModalElement {
     const queryParams: Record<string, string> = {
       mode: mode,
@@ -229,6 +231,7 @@ export default (function() {
         queryParams.expandFolder = entryPoint;
       }
     }
+    queryParams.useEvents = useEvents ? '1' : '0';
     return Modal.advanced({
       type: Modal.types.iframe,
       content: FormEngine.browserUrl + '&' + (new URLSearchParams(queryParams)).toString(),
@@ -489,8 +492,23 @@ export default (function() {
       const disallowedTypes = target.dataset.disallowedTypes ?? '';
       const irreObjectId = target.dataset.irreObjectId ?? '';
       const entryPoint = target.dataset.entryPoint;
+      const useEvents = target.dataset.useEvents === 'true';
 
-      FormEngine.openPopupWindow(mode, fieldReference, allowedTypes, disallowedTypes, irreObjectId, entryPoint);
+      const modal = FormEngine.openPopupWindow(mode, fieldReference, allowedTypes, disallowedTypes, irreObjectId, entryPoint, useEvents);
+
+      if (useEvents) {
+        modal.addEventListener('typo3:element-browser:message', (e: CustomEvent<ElementBrowserMessage>) => {
+          const { actionName, close } = e.detail;
+          if (actionName === 'typo3:elementBrowser:elementAdded') {
+            const { fieldName, value, label } = e.detail as ElementBrowserElementAddedMessage;
+            FormEngine.setSelectOptionFromExternalSource(fieldName, value, label || value, label || value);
+          }
+          if (close) {
+            modal.hideModal();
+            target.focus();
+          }
+        });
+      }
     }).delegateTo(document, '.t3js-element-browser');
 
     new RegularEvent('click', (evt: Event, target: HTMLElement): void => {

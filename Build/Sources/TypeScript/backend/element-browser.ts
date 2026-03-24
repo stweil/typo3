@@ -24,6 +24,18 @@ interface InlineSettings {
   objectId: string;
 }
 
+export interface ElementBrowserMessage {
+  actionName: 'typo3:foreignRelation:insert' | 'typo3:elementBrowser:elementAdded';
+  close: boolean;
+}
+
+export interface ElementBrowserElementAddedMessage extends ElementBrowserMessage {
+  actionName: 'typo3:elementBrowser:elementAdded';
+  fieldName: string;
+  value: string;
+  label: string;
+}
+
 declare global {
   interface Document {
     list_frame: Window;
@@ -190,13 +202,18 @@ class ElementBrowser {
   }
 
   private addElement(label: string, value: string, close: boolean): void {
+    const message = {
+      actionName: 'typo3:elementBrowser:elementAdded',
+      fieldName: this.fieldReference,
+      value: value,
+      label: label,
+      close: close
+    } as const;
+    if (document.body.dataset.useEvents === 'true') {
+      this.dispatch(message);
+      return;
+    }
     if (this.getParent()) {
-      const message = {
-        actionName: 'typo3:elementBrowser:elementAdded',
-        fieldName: this.fieldReference,
-        value: value,
-        label: label
-      };
       MessageUtility.send(message, this.getParent());
 
       if (close) {
@@ -208,6 +225,13 @@ class ElementBrowser {
       alert('Error - reference to main window is not set properly!');
       this.focusOpenerAndClose();
     }
+  }
+
+  private dispatch(message: ElementBrowserMessage) {
+    window.frameElement.dispatchEvent(new CustomEvent<ElementBrowserMessage>('typo3:element-browser:message', {
+      bubbles: true,
+      detail: message
+    }));
   }
 }
 
