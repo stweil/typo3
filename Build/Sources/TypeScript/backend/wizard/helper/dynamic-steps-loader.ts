@@ -13,6 +13,17 @@ type WizardConfiguration = {
   }[];
 };
 
+/**
+ * Dynamically loads and instantiates wizard steps based on the provided wizard type and context.
+ *
+ * 1. Sends an AJAX request to fetch the configuration for the specified wizard type.
+ * 2. Resolves the response into a WizardConfiguration object containing step definitions.
+ * 3. Iterates over each step configuration:
+ *    - Validates that the module path exists.
+ *    - Dynamically imports the step module.
+ *    - Instantiates the step class and merges the context and step-specific configuration.
+ * 4. Returns a Promise that resolves with an array of fully initialized WizardStepInterface instances.
+ */
 export function loadDynamicSteps(wizardType: string, context: any): Promise<WizardStepInterface[]> {
   return new AjaxRequest(TYPO3.settings.ajaxUrls.wizard_config).withQueryArguments({ mode: wizardType, data: context.getDataStore() }).get()
     .then((response: AjaxResponse) => response.resolve())
