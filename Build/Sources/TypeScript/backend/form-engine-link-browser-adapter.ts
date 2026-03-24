@@ -16,18 +16,8 @@
  * LinkBrowser communication with parent window
  */
 import LinkBrowser from '@typo3/backend/link-browser';
-import Modal from '@typo3/backend/modal';
 import AjaxRequest from '@typo3/core/ajax/ajax-request';
-import type { AjaxResponse } from '@typo3/core/ajax/ajax-response';
-
-interface OnFieldChangeItem {
-  name: string;
-  data: {[key: string]: string|number|boolean|null}
-}
-
-interface Response {
-  typoLink?: string;
-}
+import { FormEngineLinkBrowserSetLinkEvent, type OnFieldChangeItem } from '@typo3/backend/event/form-engine-link-browser-set-link-event';
 
 export default (function() {
 
@@ -46,116 +36,22 @@ export default (function() {
   };
 
   /**
-   * Return reference to parent's form element
-   *
-   * @returns {Element}
+   * Send an event with the the currently select link as payload to the opening context
    */
-  FormEngineLinkBrowserAdapter.checkReference = function(): void {
-    const selector = 'form[name="' + LinkBrowser.parameters.formName + '"] [data-formengine-input-name="' + LinkBrowser.parameters.itemName + '"]';
-    const opener = FormEngineLinkBrowserAdapter.getParent();
+  LinkBrowser.finalizeFunction = async (url: string): Promise<void> => {
+    const response = await new AjaxRequest(TYPO3.settings.ajaxUrls.link_browser_encodetypolink).withQueryArguments({
+      ...LinkBrowser.getLinkAttributeValues(),
+      url
+    }).get();
 
-    if (opener && opener.document && opener.document.querySelector(selector)) {
-      return opener.document.querySelector(selector);
-    } else {
-      Modal.dismiss();
+    const { typoLink } = await response.resolve();
+    if (!typoLink) {
+      return;
     }
-  };
-
-  /**
-   * Save the current link back to the opener
-   *
-   * @param {String} input
-   */
-  LinkBrowser.finalizeFunction = function(input: string): void {
-    const field = FormEngineLinkBrowserAdapter.checkReference();
-    if (field) {
-      const attributeValues = LinkBrowser.getLinkAttributeValues();
-      // encode link on server
-      attributeValues.url = input;
-
-      (new AjaxRequest(TYPO3.settings.ajaxUrls.link_browser_encodetypolink))
-        .withQueryArguments(attributeValues)
-        .get()
-        .then(async (response: AjaxResponse): Promise<void> => {
-          const data: Response = await response.resolve();
-          if (data.typoLink) {
-            field.value = data.typoLink;
-            field.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
-
-            if (FormEngineLinkBrowserAdapter.onFieldChangeItems instanceof Array) {
-              // @todo us `CustomEvent` or broadcast channel as alternative
-              FormEngineLinkBrowserAdapter.getParent()
-                .TYPO3.FormEngine.processOnFieldChange(FormEngineLinkBrowserAdapter.onFieldChangeItems);
-            }
-
-            Modal.dismiss();
-          }
-        });
-    }
-  };
-
-  /**
-   * Returns the parent document object
-   */
-  FormEngineLinkBrowserAdapter.getParent = function(): Window {
-    let opener: Window;
-    if (
-      typeof window.parent !== 'undefined' &&
-      typeof window.parent.document.list_frame !== 'undefined' &&
-      window.parent.document.list_frame.parent.document.querySelector('.t3js-modal-iframe') !== null
-    ) {
-      opener = window.parent.document.list_frame;
-    } else if (
-      typeof window.parent !== 'undefined' &&
-      typeof window.parent.frames.list_frame !== 'undefined' &&
-      window.parent.frames.list_frame.parent.document.querySelector('.t3js-modal-iframe') !== null
-    ) {
-      opener = window.parent.frames.list_frame;
-    } else if (
-      typeof window.frames !== 'undefined' &&
-      typeof window.frames.frameElement !== 'undefined' &&
-      window.frames.frameElement !== null &&
-      window.frames.frameElement.classList.contains('t3js-modal-iframe')
-    ) {
-      opener = (window.frames.frameElement as HTMLIFrameElement).contentWindow.parent;
-    } else if (window.opener) {
-      opener = window.opener;
-    }
-
-    // Verify the resolved opener contains the target form (e.g. when editing
-    // in a modal iframe, list_frame resolves to the content frame
-    // which is the wrong window). Fall back to searching all frames in top.
-    const formName = LinkBrowser.parameters?.formName;
-    if (formName && !FormEngineLinkBrowserAdapter.windowHasForm(opener, formName)) {
-      const found = FormEngineLinkBrowserAdapter.findFormWindow(formName);
-      if (found) {
-        opener = found;
-      }
-    }
-
-    return opener;
-  };
-
-  FormEngineLinkBrowserAdapter.windowHasForm = function(win: Window, formName: string): boolean {
-    return win?.document?.querySelector('form[name="' + formName + '"]') !== null;
-  };
-
-  FormEngineLinkBrowserAdapter.findFormWindow = function(formName: string): Window | null {
-    try {
-      for (let i = 0; i < top.frames.length; i++) {
-        try {
-          const frame = top.frames[i];
-          if (frame !== window && FormEngineLinkBrowserAdapter.windowHasForm(frame, formName)) {
-            return frame;
-          }
-        } catch {
-          // Cross-origin frame, skip
-        }
-      }
-    } catch {
-      // Cannot access top.frames
-    }
-    return null;
+    window.frameElement.dispatchEvent(new FormEngineLinkBrowserSetLinkEvent(
+      typoLink,
+      FormEngineLinkBrowserAdapter.onFieldChangeItems,
+    ));
   };
 
   return FormEngineLinkBrowserAdapter;
