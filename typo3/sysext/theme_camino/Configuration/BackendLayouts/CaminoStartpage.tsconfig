@@ -26,7 +26,7 @@ mod {
                     colPos = 0
                     colspan = 4
                     identifier = content
-                    disallowedContentTypes = camino_hero, camino_hero_small, camino_hero_text_only, camino_sociallinks, camino_linklist, camino_testimonial, camino_textmedia_teaser
+                    disallowedContentTypes = camino_hero, camino_hero_small, camino_hero_text_only, camino_sociallinks, camino_linklist, camino_textmedia_teaser
                   }
                 }
               }
