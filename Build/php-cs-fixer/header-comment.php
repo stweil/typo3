@@ -33,6 +33,7 @@ $finder = PhpCsFixer\Finder::create()
     ->notName('ext_localconf.php')
     ->notName('ext_tables.php')
     ->notName('ext_emconf.php')
+    ->notName('framework-packages.php')
     // ClassAliasMap files do not need header comments
     ->notName('ClassAliasMap.php')
     // CodeSnippets and Examples in Documentation do not need header comments
