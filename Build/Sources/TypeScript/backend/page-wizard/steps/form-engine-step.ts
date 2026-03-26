@@ -58,16 +58,17 @@ export class FormEngineStep implements WizardStepInterface, WizardStepAfterRende
     return fields;
   }
 
-  public setValue(fields: Record<string, any>): void {
-    const form = this.context.wizard.querySelector('form[name="editform"]') as HTMLFormElement;
+  public setValue(fields: Record<string, unknown>): void {
+    const form = this.context.wizard.querySelector<HTMLFormElement>('form[name="editform"]');
     const values = fields?.[this.key];
     if (!form || !values) {
       return;
     }
 
     for (const [key, val] of Object.entries(values)) {
-      const input = form.elements[key as any] as HTMLInputElement;
+      const input = form.elements.namedItem(key) as HTMLInputElement;
       if (input) {
+        delete input.dataset.formengineInputInitialized;
         if (input.type === 'checkbox') {
           input.checked = !!val;
         } else {
@@ -86,11 +87,11 @@ export class FormEngineStep implements WizardStepInterface, WizardStepAfterRende
   }
 
   public async afterRender(): Promise<void> {
+    this.setValue(this.context.getStoreData('fields'));
+
     if (this.modules.length > 0) {
       await this.loadModules();
     }
-
-    this.setValue(this.context.getStoreData('fields'));
 
     if (TYPO3.FormEngine) {
       TYPO3.FormEngine.reinitialize();
