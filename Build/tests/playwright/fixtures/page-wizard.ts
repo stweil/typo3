@@ -10,36 +10,26 @@ export class PageWizard {
   constructor(private readonly page: Page) {
   }
 
-  async createDefaultPage(modal: Modal, title: string) {
+  async createDefaultPageAfterDrag(modal: Modal, title: string) {
     await this.ensurePageWizardModalVisible(modal);
     const modalContent = await modal.getModalContent();
 
-    const progress = await this.getProgressData(modalContent);
+    const input = modalContent.locator('[data-formengine-input-name^="data[pages]"][data-formengine-input-name$="[title]"]');
+    await input.fill(title);
+    await input.press('Tab'); // triggeres change event
 
-    do {
-      if (progress.currentStep === 3) {
-        const input = modalContent.locator('[data-formengine-input-name^="data[pages]"][data-formengine-input-name$="[title]"]');
-        // fill title if element exists
-        await input.fill(title);
-        await input.press('Tab'); // triggeres change event
-      }
+    // go to step 4 (confirmation)
+    await this.gotToNextStep(modalContent);
 
-      await this.gotToNextStep(modalContent);
-      progress.currentStep += 1;
-
-    } while(false === await this.isConfirmStep(modalContent));
-
+    // go to step 5 (finish)
     await this.getButton(modalContent, PageWizard.CONFIRM_BUTTON_TEXT).click();
+
+    // finish
     await this.getButton(modalContent,PageWizard.FINISH_BUTTON_TEXT).click();
   }
 
   async gotToNextStep(modalContent: Locator): Promise<void> {
-    await this.getButton(modalContent,'Next').click();
-    await this.page.waitForLoadState('networkidle');
-  }
-
-  async isConfirmStep(modalContent: Locator): Promise<boolean> {
-    return (await this.getButton(modalContent, PageWizard.CONFIRM_BUTTON_TEXT).count() > 0);
+    await this.getButton(modalContent, 'Next').click();
   }
 
   getButton(modalContent: Locator, title: string): Locator {
@@ -50,15 +40,5 @@ export class PageWizard {
     const modalContent = await modal.getModalContent();
     await expect(modalContent.locator('typo3-backend-page-wizard')).toHaveCount(1);
     await this.page.waitForLoadState('networkidle');
-  }
-
-  async getProgressData(modalContent: Locator): Promise<{currentStep: number, maxSteps: number}> {
-    const stepText = await modalContent.locator('typo3-backend-progress-tracker >> .tracker-step').textContent();
-
-    const match = stepText.match(/(\d+)\s*of\s*(\d+)/);
-    return {
-      currentStep: Number(match[1]),
-      maxSteps: Number(match[2]),
-    };
   }
 }

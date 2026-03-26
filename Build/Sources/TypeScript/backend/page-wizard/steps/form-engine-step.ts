@@ -14,7 +14,6 @@
 import type { WizardStepInterface } from '@typo3/backend/wizard/steps/wizard-step-interface';
 import '@typo3/backend/tree/page-position-select';
 import { html, type TemplateResult } from 'lit';
-import { Task } from '@lit/task';
 import type { PageWizardContext } from '@typo3/backend/page-wizard/page-wizard';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import type { SummaryItem } from '@typo3/backend/wizard/steps/summary-item-interface';
@@ -31,7 +30,7 @@ export class FormEngineStep implements WizardStepInterface, WizardStepAfterRende
   modules: JavaScriptItemPayload[] = [];
   labels: Record<string, string> = {};
 
-  private summaryTask: Task<[fields: Record<string, string>, uid: number], Record<string, string>> = null;
+  private summary: SummaryItem[];
 
   constructor(
     private readonly context: PageWizardContext,
@@ -83,40 +82,7 @@ export class FormEngineStep implements WizardStepInterface, WizardStepAfterRende
   }
 
   public getSummaryData(): SummaryItem[] {
-    const pageUid = (this.context.getStoreData('position')?.pageUid || 0);
-    const fields = this.context.getStoreData('fields') || {};
-    const values = fields[this.key] || {};
-
-    const summaryFields: Record<string, string> = {};
-    for (const [key, value] of Object.entries(values)) {
-      summaryFields[this.getLabelKey(key)] = value as string;
-    }
-
-    if (!this.summaryTask) {
-      this.summaryTask = new Task(this.context.wizard, {
-        task: async ([fieldsToFetch, uid]: [Record<string, string>, number]): Promise<Record<string, string>> => {
-          const response = await new AjaxRequest(TYPO3.settings.ajaxUrls.wizard_page_get_processed_value)
-            .withQueryArguments({ fields: fieldsToFetch, pageUid: uid })
-            .get();
-          return await response.resolve();
-        },
-        args: () => [summaryFields, pageUid],
-      });
-    }
-
-    return Object.keys(summaryFields).map((labelKey) => {
-      const value = summaryFields[labelKey];
-      const summaryValue = this.summaryTask.render({
-        complete: (result: Record<string, string>) => html`${result[labelKey] ?? value}`,
-        pending: () => this.context.wizard.renderLoader(),
-        error: () => html`${value}`,
-      });
-
-      return {
-        label: this.labels[labelKey] || labelKey,
-        value: summaryValue
-      };
-    });
+    return this.summary;
   }
 
   public async afterRender(): Promise<void> {
@@ -151,8 +117,30 @@ export class FormEngineStep implements WizardStepInterface, WizardStepAfterRende
     return true;
   }
 
-  public beforeAdvance(): void {
-    this.context.setStoreData('fields', this.getValue());
+  public async beforeAdvance(): Promise<void> {
+    const pageUid = (this.context.getStoreData('position')?.pageUid || 0);
+    const fields = this.getValue();
+    const values = fields[this.key] || {};
+
+    const summaryFields: Record<string, string> = {};
+    for (const [key, value] of Object.entries(values)) {
+      summaryFields[this.getLabelKey(key)] = value as string;
+    }
+
+    const response = await new AjaxRequest(TYPO3.settings.ajaxUrls.wizard_page_get_processed_value)
+      .withQueryArguments({ fields: summaryFields, pageUid })
+      .get();
+    const result: Record<string, string> = await response.resolve();
+
+    this.summary = Object.keys(summaryFields).map((labelKey) => {
+      const value = summaryFields[labelKey];
+      return {
+        label: this.labels[labelKey] || labelKey,
+        value: result[labelKey] ?? value
+      };
+    });
+
+    this.context.setStoreData('fields', fields);
   }
 
   private async loadModules(): Promise<void> {
