@@ -145,6 +145,7 @@ export class DoktypeStep implements WizardStepInterface, WizardStepValueInterfac
                 >
               </div>
             </div>
+            ${finalGroups.length == 0 ? html`<div role="alert" class="alert alert-info">${labels.get('step.doktype.filter.noResults')}</div>` : nothing}
             <div class="form-check-card-container">
               ${finalGroups.map((group: DoktypeGroup) => html`
                 ${group.label ? html`<h3 class="form-check-card-container-headline">${group.label}</h3>` : nothing}
