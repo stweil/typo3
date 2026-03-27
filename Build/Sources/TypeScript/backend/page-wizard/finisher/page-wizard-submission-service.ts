@@ -26,6 +26,9 @@ export class PageWizardSubmissionService implements SubmissionServiceInterface {
       .withQueryArguments({ mode: 'page_wizard' })
       .post(this.context.getDataStore());
 
-    return await response.resolve();
+    const result: FinisherResult = await response.resolve();
+    document.dispatchEvent(new CustomEvent('typo3:pagetree:refresh'));
+
+    return result;
   }
 }
