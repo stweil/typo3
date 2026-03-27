@@ -24,7 +24,7 @@ is configured correctly: :guilabel:`Root Page > Page Properties > Behaviour > Us
     :alt: Screenshot of the Page Properties behaviour tab
     :zoom: lightbox
 
-When a Root Page is created, a new Site record is automatically created.
+When a Root Page is created, a new Site record is automatically available.
 
 ..  _edit-site-configuration:
 
@@ -61,3 +61,13 @@ Save your changes. Then clear the cache
     :class: with-border
     :alt: Screenshot of the Clear Cache option
     :zoom: lightbox
+
+Adjust page tree and backend layouts
+====================================
+
+Now that the theme is activated, revisit your page tree
+to apply the backend layouts, so that you can place
+Camino-specific content elements and adapt the frontend
+output.
+
+Continue here: :ref:`_backend-layouts`.

@@ -24,6 +24,13 @@ To change the backend layout used on a page:
 You can also specify the default backend layout used on newly created child pages
 by using :guilabel:`Backend Layout (subpages of this page)`
 
+..  hint::
+
+    Take care that every sub-page of your page tree needs to have a backend layout
+    assigned, either via the `(this page only)` or `(subpages of this page)`
+    directive. Otherwise, opening a page in the frontend without an assigned
+    layout will show an error page.
+
 ..  _start-page:
 
 "Camino: Start page"
