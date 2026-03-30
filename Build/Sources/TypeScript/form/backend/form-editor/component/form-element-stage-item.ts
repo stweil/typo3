@@ -33,11 +33,6 @@ interface MultivalueItem {
   className?: string;
 }
 
-export interface ToolbarConfig {
-  showToolbar: boolean;
-  isCompositeElement: boolean;
-}
-
 /**
  * Module: @typo3/form/backend/form-editor/component/form-element-stage-item
  *
@@ -60,11 +55,11 @@ export class FormElementStageItem extends LitElement {
   @property({ type: String, attribute: 'element-icon-identifier' }) elementIconIdentifier: string = '';
   @property({ type: Boolean, attribute: 'is-required' }) isRequired: boolean = false;
   @property({ type: Boolean, attribute: 'is-hidden' }) isHidden: boolean = false;
+  @property({ type: Boolean, reflect: true }) invalid: boolean = false;
   @property({ type: Array }) validators: Validator[] = [];
   @property({ type: Array }) options: SelectOption[] = [];
   @property({ type: Array }) allowedMimeTypes?: string[];
   @property({ type: String }) content?: string;
-  @property({ type: Object }) toolbarConfig?: ToolbarConfig;
 
   protected override createRenderRoot(): HTMLElement | ShadowRoot {
     // Avoid Shadow DOM so global styles apply to the element contents
@@ -74,20 +69,14 @@ export class FormElementStageItem extends LitElement {
   protected override render(): TemplateResult {
     return html`
       <typo3-form-form-element-stage-item-toolbar
-        ?active="${this.toolbarConfig?.showToolbar ?? false}"
-        ?is-composite="${this.toolbarConfig?.isCompositeElement ?? false}">
+        active
+        icon-identifier="${this.elementIconIdentifier}"
+        element-type="${this.elementType}"
+        element-identifier="${this.elementIdentifier}"
+        ?is-hidden="${this.isHidden}"
+        ?is-invalid="${this.invalid}">
       </typo3-form-form-element-stage-item-toolbar>
-      <div class="formeditor-element-label">
-        <span>${this.elementType}</span>: <span>${this.elementIdentifier}</span>
-      </div>
       <div class="formeditor-element-body">
-        <div class="formeditor-element-icon">
-          <typo3-backend-icon
-            identifier="${this.elementIconIdentifier}"
-            size="small"
-            overlay="${this.isHidden ? 'overlay-hidden' : ''}">
-          </typo3-backend-icon>
-        </div>
         <div class="formeditor-element-info">
           <div class="formeditor-element-info-label">
             <span>${stripTags(this.elementLabel)}</span>
@@ -197,4 +186,3 @@ declare global {
     'typo3-form-form-element-stage-item': FormElementStageItem;
   }
 }
-

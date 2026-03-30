@@ -447,14 +447,53 @@ function validateCollectionElement(propertyPath: string, editorHtml: HTMLElement
   const controlsWrapper = getEditorControlsWrapperDomElement(editorHtml);
   const collectionElement = controlsWrapper?.closest<HTMLElement>(getHelper().getDomElementClassName('collectionElement', true)) ?? null;
 
+  const validationErrorsElement = getHelper().getTemplatePropertyElement('validationErrors', editorHtml);
+  const inputElement = getEditorControlsWrapperDomElement(editorHtml)?.querySelector<HTMLElement>('input, textarea, select, button') ?? null;
+
   if (validationResults.length > 0) {
-    const errEl = getHelper().getTemplatePropertyElement('validationErrors', editorHtml);
-    if (errEl) { errEl.innerHTML = '<span class="text-danger">' + validationResults[0] + '</span>'; }
-    getViewModel().setElementValidationErrorClass(controlsWrapper, 'hasError');
+    // Generate a unique ID for the error message to link via aria-describedby
+    let errorId = validationErrorsElement?.id ?? '';
+    if (!errorId) {
+      errorId = 'validation-error-' + Math.random().toString(36).substring(2, 9);
+      if (validationErrorsElement) {
+        validationErrorsElement.id = errorId;
+      }
+    }
+
+    if (validationErrorsElement) {
+      validationErrorsElement.innerHTML =
+        '<span class="text-danger">' +
+        '<typo3-backend-icon identifier="actions-exclamation-circle" size="small"></typo3-backend-icon> ' +
+        validationResults[0] +
+        '</span>';
+      validationErrorsElement.setAttribute('role', 'alert');
+    }
+
+    if (inputElement) {
+      inputElement.setAttribute('aria-invalid', 'true');
+      inputElement.setAttribute('aria-describedby', errorId);
+    }
+
+    getViewModel().setElementValidationErrorClass(
+      getEditorControlsWrapperDomElement(editorHtml),
+      'hasError'
+    );
   } else {
-    const errEl = getHelper().getTemplatePropertyElement('validationErrors', editorHtml);
-    if (errEl) { errEl.innerHTML = ''; }
-    getViewModel().removeElementValidationErrorClass(controlsWrapper, 'hasError');
+    if (validationErrorsElement) {
+      validationErrorsElement.innerHTML = '';
+      validationErrorsElement.removeAttribute('role');
+    }
+
+    // Remove aria attributes from input
+    if (inputElement) {
+      inputElement.removeAttribute('aria-invalid');
+      inputElement.removeAttribute('aria-describedby');
+    }
+
+    getViewModel().removeElementValidationErrorClass(
+      getEditorControlsWrapperDomElement(editorHtml),
+      'hasError'
+    );
   }
 
   validationResults = getFormEditorApp().validateFormElement(getCurrentlySelectedFormElement());
@@ -2104,6 +2143,10 @@ export function renderFormElementSelectorEditorAddition(
     });
   } else {
     formElementSelector.remove();
+    const controlsGroup = editorHtml.querySelector('[data-identifier="inspectorEditorControlsGroup"]');
+    if (controlsGroup) {
+      controlsGroup.classList.remove('input-group');
+    }
   }
 }
 

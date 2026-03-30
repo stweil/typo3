@@ -12,178 +12,86 @@
 @import "../../node_modules/bootstrap/scss/variables";
 @import "../../node_modules/bootstrap/scss/mixins";
 
+//
+// Variables
+//
 .formeditor {
-    --formeditor-module-sidebar-collapsed: 33px;
+    --formeditor-module-gap: var(--module-body-padding-x);
     --formeditor-module-inspector: 400px;
-    --formeditor-sidebar-color: var(--typo3-text-color-base);
-    --formeditor-sidebar-bg: var(--typo3-surface-container-base);
-    --formeditor-sidebar-border-width: 1px;
-    --formeditor-sidebar-border-color: color-mix(in srgb, var(--formeditor-sidebar-bg), var(--formeditor-sidebar-color) 10%);
-    --formeditor-stage-element-height: 62px;
+    --formeditor-inspector-color: var(--typo3-text-color-base);
+    --formeditor-inspector-bg: var(--typo3-surface-container-low);
+    --formeditor-inspector-border-width: var(--typo3-component-border-width);
+    --formeditor-inspector-border-color: color-mix(in srgb, var(--formeditor-inspector-bg), var(--formeditor-inspector-color) var(--typo3-border-mix));
+    --formeditor-inspector-border-radius: var(--typo3-component-border-radius);
+    --formeditor-inspector-box-shadow: var(--typo3-component-box-shadow);
     --formeditor-stage-element-padding-y: .5rem;
     --formeditor-stage-element-padding-x: .75rem;
     --formeditor-stage-element-validator-width: 100px;
-    --formeditor-stage-element-icon-width: 40px;
+    --formeditor-stage-spacing: 1rem;
     --formeditor-stage-element-border-width: var(--typo3-component-border-width);
     --formeditor-stage-element-border-radius: var(--typo3-component-border-radius);
-    --formeditor-stage-element-bg-state: initial;
-    --formeditor-stage-element-color-state: initial;
     --formeditor-stage-element-border-color-state: initial;
-    --formeditor-stage-element-bg: var(--typo3-component-bg);
+    --formeditor-stage-element-bg: var(--typo3-surface-bright);
     --formeditor-stage-element-color: var(--typo3-component-color);
     --formeditor-stage-element-border-color: var(--typo3-component-border-color);
-    --formeditor-stage-element-hover-bg: var(--typo3-component-hover-bg);
-    --formeditor-stage-element-hover-color: var(--typo3-component-hover-color);
     --formeditor-stage-element-hover-border-color: var(--typo3-component-hover-border-color);
-    --formeditor-stage-element-active-bg: var(--typo3-component-active-bg);
-    --formeditor-stage-element-active-color: var(--typo3-component-active-color);
     --formeditor-stage-element-active-border-color: var(--typo3-component-active-border-color);
-    --formeditor-stage-element-hidden-bg: var(--typo3-component-bg);
+    --formeditor-stage-element-hidden-bg: var(--typo3-surface-bright);
     --formeditor-stage-element-hidden-color: var(--typo3-component-color);
     --formeditor-stage-element-hidden-border-color: var(--typo3-component-border-color);
+    position: relative;
+}
+
+[data-module-name="form_editor"] {
+    overflow-x: clip;
+}
+
+@media (max-width: 949px) {
+    body:has(.formeditor-inspector-expanded) {
+        overflow: hidden;
+        max-height: 100dvh;
+    }
 }
 
 //
-// Module
+// Layout
 //
-.formeditor-loader,
-.formeditor-module {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-}
-
 .formeditor-loader {
     display: flex;
     flex-direction: column;
     gap: .25rem;
     align-items: center;
     justify-content: center;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
 }
 
 .formeditor-module {
-    display: flex;
-}
-
-.formeditor-module-viewmode-preview {
-    .formeditor-sidebar-inspector {
-        margin-inline-end: calc(var(--formeditor-module-inspector) * -1);
-    }
-}
-
-.formeditor-sidebar {
-    position: relative;
-    display: flex;
-    z-index: 4;
-    height: 100%;
-    color: var(--formeditor-sidebar-color);
-    border-top: var(--formeditor-sidebar-border-width) solid var(--formeditor-sidebar-border-color);
-    background: var(--formeditor-sidebar-bg);
-    transition: margin .5s ease-out;
-    isolation: isolate;
-}
-
-.formeditor-sidebar-inspector {
-    width: var(--formeditor-module-inspector);
-    margin-inline-end: 0;
-
-    .formeditor-sidebar-inner {
-        border-inline-start: 1px solid var(--module-docheader-border-color);
-    }
-
-    .formeditor-sidebar-toggle {
-        text-align: end;
-        --typo3-caret-rotation: calc(-90deg * var(--typo3-position-modifier));
-    }
-}
-
-.formeditor-sidebar-toggle {
-    display: none;
-
-    .btn {
-        height: 100%;
-        border-width: 0;
-        --typo3-btn-border-radius: 0;
-        --typo3-btn-border-color: var(--module-docheader-border-color);
-
-        &:focus-visible {
-            outline-offset: -1px;
-            outline: 1px var(--typo3-outline-style) color-mix(in srgb, var(--typo3-btn-focus-border-color), transparent 25%);
-        }
-    }
-}
-
-.formeditor-sidebar-inner {
     flex-grow: 1;
-    padding: var(--module-body-padding);
-    overflow: auto;
+    min-width: 0;
+    min-height: 0;
 }
 
-.formeditor-stage {
-    overflow: auto;
+.formeditor-stage-container {
     position: relative;
-    padding: var(--module-body-padding);
-    height: 100%;
-    max-height: 100%;
+    min-width: 0;
+    min-height: 0;
     flex-grow: 1;
 }
 
-.formeditor-stage-inner {
+.formeditor-stage-container-inner {
     position: relative;
-    margin-inline: auto;
     width: 100%;
-    max-width: 800px;
 
     > *:last-child {
         margin-bottom: 0;
     }
 }
 
-@media (max-width: 849px) {
-    .formeditor-sidebar-inspector {
-        position: absolute;
-        inset-inline-end: 0;
-        max-width: 100%;
-        width: calc(var(--formeditor-module-sidebar-collapsed) + var(--formeditor-module-inspector));
-        box-shadow: var(--typo3-component-box-shadow-flyout);
-
-        .formeditor-sidebar-inner {
-            border: none;
-        }
-
-        .formeditor-sidebar-toggle {
-            display: block;
-
-            .btn {
-                border-inline-start-width: 1px;
-                border-inline-end-width: 1px;
-            }
-        }
-    }
-
-    .formeditor-stage {
-        margin-inline-end: var(--formeditor-module-sidebar-collapsed);
-    }
-
-    .formeditor-sidebar-inspector:not(.formeditor-sidebar-expanded) {
-        position: absolute;
-        width: var(--formeditor-module-sidebar-collapsed);
-        box-shadow: none;
-
-        .formeditor-sidebar-toggle {
-            --typo3-caret-rotation: calc(90deg * var(--typo3-position-modifier));
-
-            .btn {
-                border-inline-end-width: 0;
-            }
-        }
-
-        .formeditor-sidebar-inner {
-            display: none;
-        }
-    }
-}
-
+//
+// Header
+//
 .formeditor-header {
     display: flex;
     justify-content: space-between;
@@ -196,34 +104,58 @@
     }
 }
 
-.formeditor-list {
-    display: grid;
-    list-style: none;
-    padding: 0;
+.formeditor-header-actions {
+    display: flex;
     gap: .5rem;
-    margin: 0;
-
-    li {
-        border-radius: 4px;
-    }
-}
-
-//
-// Sortable
-//
-.formeditor-sortable-handle {
-    cursor: pointer;
-}
-
-.formeditor-sortable-ghost {
-    outline: 1px dashed var(--typo3-state-success-border-color) !important;
-    outline-offset: -1px !important;
+    align-items: center;
 }
 
 //
 // Inspector
 //
 .formeditor-inspector {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    z-index: var(--typo3-zindex-header);
+    top: calc(-1 * (var(--module-body-padding-y) + var(--formeditor-inspector-border-width)));
+    inset-inline-end: calc(var(--module-body-padding-x) * -1);
+    width: calc(100% + var(--module-body-padding-x));
+    height: calc(100dvh - var(--module-docheader-height) - var(--module-body-padding-y));
+    color: var(--formeditor-inspector-color);
+    border: var(--formeditor-inspector-border-width) solid var(--formeditor-inspector-border-color);
+    border-inline-end: 0;
+    border-radius: var(--formeditor-inspector-border-radius) 0 0 var(--formeditor-inspector-border-radius);
+    background: var(--formeditor-inspector-bg);
+    box-shadow: var(--typo3-component-box-shadow-flyout);
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform .3s ease-out;
+    transform: translateX(100%);
+
+    &.formeditor-inspector-expanded {
+        transform: translateX(0%);
+    }
+}
+
+.formeditor-inspector-inner {
+    flex-grow: 1;
+    min-height: 0;
+    padding: var(--module-body-padding);
+    overflow: auto;
+}
+
+.formeditor-inspector-collapse {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: calc(var(--typo3-spacing) / 2);
+}
+
+.formeditor-inspector-expand {
+    display: inline-flex;
+}
+
+.formeditor-inspector-content {
     .input-group {
         flex-wrap: nowrap;
 
@@ -276,24 +208,30 @@
     }
 }
 
-.formeditor-inspector-collection-element {
-    .panel-title {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        width: 0;
-    }
-
-    .panel-actions {
-        margin: calc(var(--formeditor-stage-element-padding-y) * -1) 0;
-    }
-}
-
 //
 // Stage
 //
+typo3-form-form-element-stage-item-toolbar {
+    display: block;
+}
+
 .formeditor-stage {
+    overflow-y: hidden;
+    overflow-x: auto;
+    border-radius: var(--formeditor-stage-element-border-radius);
+    border: 1px dotted color-mix(in srgb, var(--module-bg), currentColor 30%);
+    margin-bottom: var(--typo3-spacing);
+    padding: var(--module-body-padding);
+
+    typo3-form-page-stage-item,
+    typo3-form-form-element-stage-item {
+        display: block;
+    }
+
     .formeditor-page-title {
+        font-size: .875rem;
+        font-weight: bold;
+        margin: 0 0 var(--typo3-spacing);
         cursor: pointer;
 
         &:empty:before {
@@ -307,69 +245,48 @@
             text-decoration-color: color-mix(in srgb, currentColor, transparent 50%);
         }
     }
-
-    div:has(> .formeditor-page-title):has(+ *) {
-        .formeditor-page-title {
-            margin: 0 0 var(--typo3-spacing);
-        }
-    }
 }
 
-// Preview
-.formeditor-module-viewmode-preview {
-    .formeditor-stage {
-        select[multiple="multiple"] {
-            height: auto;
-            min-height: 32px;
-        }
+.formeditor-stage-section {
+    border-radius: calc(var(--formeditor-stage-element-border-radius) - 3px);
+    background-color: var(--typo3-surface-container-base);
+}
 
-        textarea {
-            min-height: 100px;
-        }
+.formeditor-stage-heading {
+    margin-bottom: var(--formeditor-stage-spacing);
+}
 
-        .container {
-            width: auto;
-        }
+.formeditor-stage-area {
+    padding: var(--formeditor-stage-spacing);
+}
 
-        .form-navigation {
-            .btn-group {
-                span,
-                button {
-                    display: inline-flex;
-                    margin-inline-end: 1em;
-                }
-            }
-        }
-
-        .formeditor-element-preview {
-            position: relative;
-            display: inline-block;
-            width: 100%;
-        }
-
-        .formeditor-new-element-container {
-            display: none;
-        }
-    }
+.formeditor-stage-list,
+.formeditor-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    list-style: none;
+    gap: var(--formeditor-stage-spacing);
+    margin: 0;
+    padding: 0;
 }
 
 //
 // Stage Element
 //
 .formeditor-element {
-    container-type: inline-size;
-    position: relative;
-    border-radius: var(--formeditor-stage-element-border-radius);
-    color: var(--formeditor-stage-element-color-state, var(--formeditor-stage-element-color));
+    display: flex;
+    flex-direction: column;
+    background-color: var(--formeditor-stage-element-bg);
     border: var(--formeditor-stage-element-border-width) solid var(--formeditor-stage-element-border-color-state, var(--formeditor-stage-element-border-color));
-    background-color: var(--formeditor-stage-element-bg-state, var(--formeditor-stage-element-bg));
+    border-radius: var(--formeditor-stage-element-border-radius);
+    overflow: hidden;
+    color: var(--formeditor-stage-element-color);
 
     &.formeditor-element-hidden:not(&.selected) {
         opacity: .5;
         border: var(--formeditor-stage-element-border-width) dashed var(--formeditor-stage-element-hidden-border-color);
         background-color: var(--formeditor-stage-element-hidden-bg);
         transition: opacity .3s ease-in-out;
-        --formeditor-stage-element-color-state: var(--formeditor-stage-element-hidden-color);
 
         &:hover,
         &:focus-within {
@@ -377,48 +294,45 @@
         }
     }
 
+    typo3-form-form-element-stage-item,
+    typo3-form-form-element-stage-item-toolbar {
+        display: block;
+    }
+
     .formeditor-element-toolbar {
-        display: flex;
-        justify-content: flex-end;
-        padding: var(--formeditor-stage-element-padding-y) var(--formeditor-stage-element-padding-x);
-    }
-
-    .formeditor-element-label {
-        z-index: 2;
-        position: absolute;
-        top: .9rem;
-        inset-inline-start: calc(var(--formeditor-stage-element-icon-width) + var(--formeditor-stage-element-padding-x));
-        display: none;
-        color: var(--formeditor-stage-element-color-state, var(--formeditor-stage-element-color));
-        font-size: var(--typo3-font-size-small);
-    }
-
-    .formeditor-element-icon {
-        flex-shrink: 0;
-        display: flex;
         align-items: center;
-        justify-content: center;
-        width: var(--formeditor-stage-element-icon-width);
-        height: 100%;
-        cursor: move;
-        color: var(--formeditor-stage-element-color-state, var(--formeditor-stage-element-color));
-        background-color:
-            color-mix(
-                in srgb,
-                var(--formeditor-stage-element-bg-state, var(--formeditor-stage-element-bg)),
-                var(--formeditor-stage-element-color-state, var(--formeditor-stage-element-color)) 5%
-            );
+        display: flex;
+        gap: .5rem;
+        padding: var(--formeditor-stage-spacing);
+
+        &-left,
+        &-right {
+            flex-shrink: 0;
+        }
+
+        &-title {
+            flex: 1 1 0;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 700;
+        }
+
+        &-label {
+            font-weight: 700;
+        }
     }
 
     .formeditor-element-body {
         display: flex;
         overflow: hidden;
         position: relative;
-        padding-inline-end: 40px;
-        height: var(--formeditor-stage-element-height);
         color: var(--formeditor-stage-element-color);
         background-color: var(--formeditor-stage-element-bg);
         border-radius: calc(var(--formeditor-stage-element-border-radius) - var(--formeditor-stage-element-border-width));
+        border-start-start-radius: 0;
+        border-start-end-radius: 0;
     }
 
     .formeditor-element-info {
@@ -426,22 +340,8 @@
         width: 100%;
         position: relative;
         height: 100%;
-        padding: var(--formeditor-stage-element-padding-y) var(--formeditor-stage-element-padding-x);
-        gap: var(--formeditor-stage-element-padding-x);
-
-        &:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            inset-inline: 0;
-            height: calc(var(--formeditor-stage-element-padding-y) * 2);
-            background:
-                linear-gradient(
-                    to bottom,
-                    color-mix(in srgb, var(--formeditor-stage-element-bg), transparent 100%) 0%,
-                    var(--formeditor-stage-element-bg) 100%
-                );
-        }
+        padding: var(--formeditor-stage-spacing);
+        gap: var(--formeditor-stage-spacing);
 
         > * {
             flex: 0 0 50%;
@@ -450,8 +350,9 @@
 
     .formeditor-element-info-label {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         position: relative;
+        font-weight: 700;
     }
 
     .formeditor-element-info-content {
@@ -467,29 +368,15 @@
         display: flex;
         overflow: hidden;
         height: 100%;
-        color: var(--formeditor-stage-element-hover-color);
-        background-color: var(--formeditor-stage-element-hover-bg);
+        color: var(--typo3-component-hover-color);
+        background-color: var(--typo3-component-hover-bg);
+        border-start-start-radius: var(--formeditor-stage-element-border-radius);
         margin-inline-end: calc(var(--formeditor-stage-element-validator-width) * -1);
         z-index: 2;
         transition: margin .15s ease-in-out;
 
         &:has(.formeditor-element-validator-icon:empty) {
             display: none;
-        }
-
-        &:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            inset-inline: 0;
-            z-index: 1;
-            height: calc(var(--formeditor-stage-element-padding-y) * 2);
-            background:
-                linear-gradient(
-                    to bottom,
-                    color-mix(in srgb, var(--formeditor-stage-element-hover-bg), transparent 100%) 0%,
-                    var(--formeditor-stage-element-hover-bg) 100%
-                );
         }
     }
 
@@ -530,34 +417,20 @@
     }
 
     &:hover {
-        --formeditor-stage-element-bg-state: var(--formeditor-stage-element-hover-bg);
-        --formeditor-stage-element-color-state: var(--formeditor-stage-element-hover-color);
         --formeditor-stage-element-border-color-state: var(--formeditor-stage-element-hover-border-color);
     }
 
+    &:focus-visible {
+        outline: var(--typo3-outline-width) var(--typo3-outline-style) color-mix(in srgb, var(--typo3-state-default-focus-border-color), transparent 25%);
+        outline-offset: 0;
+    }
+
     &.selected {
-        --formeditor-stage-element-bg-state: var(--formeditor-stage-element-active-bg);
-        --formeditor-stage-element-color-state: var(--formeditor-stage-element-active-color);
         --formeditor-stage-element-border-color-state: var(--formeditor-stage-element-active-border-color);
-
-        .formeditor-element-body {
-            border-start-start-radius: 0;
-            border-start-end-radius: 0;
-        }
-
-        .formeditor-element-label {
-            display: block;
-        }
+        outline: 2px solid var(--formeditor-stage-element-active-border-color);
+        outline-offset: -1px;
     }
-}
 
-@container (min-width: 500px) {
-    .formeditor-element-validator:hover {
-        margin-inline-end: 0;
-    }
-}
-
-.formeditor-element {
     &:has(+ .formeditor-list) {
         border-end-start-radius: 0;
         border-end-end-radius: 0;
@@ -569,8 +442,7 @@
     }
 
     & + .formeditor-list:not(:empty) {
-        padding: var(--formeditor-stage-element-padding-y);
-        padding-inline-start: var(--formeditor-stage-element-icon-width);
+        padding: var(--formeditor-stage-spacing);
         border: var(--formeditor-stage-element-border-width) solid var(--formeditor-stage-element-border-color-state, var(--formeditor-stage-element-border-color));
         border-top: none;
         border-end-start-radius: var(--formeditor-stage-element-border-radius);
@@ -583,13 +455,53 @@
         border-top: none;
         background-color: var(--formeditor-stage-element-hidden-bg);
         transition: opacity .3s ease-in-out;
-        --formeditor-stage-element-color-state: var(--formeditor-stage-element-hidden-color);
     }
 }
 
+@container (min-width: 500px) {
+    .formeditor-element-validator:hover {
+        margin-inline-end: 0;
+    }
+}
+
+typo3-form-form-element-stage-item[invalid] {
+    .formeditor-element-info-label {
+        color: var(--typo3-text-color-danger);
+    }
+}
+
+.formeditor-element:has(> [invalid]) {
+    --formeditor-stage-element-border-color: var(--typo3-state-danger-border-color);
+    --formeditor-stage-element-hover-border-color: var(--typo3-state-danger-hover-border-color);
+    --formeditor-stage-element-active-border-color: var(--typo3-state-danger-focus-border-color);
+}
+
 //
-// New element placeholder
+// Sortable
 //
+.formeditor-sortable-handle {
+    cursor: pointer;
+}
+
+.formeditor-sortable-ghost {
+    outline: 1px dashed var(--typo3-state-success-border-color) !important;
+    outline-offset: -1px !important;
+}
+
+.formeditor-is-dragging .formeditor-new-element-placeholder {
+    display: none;
+}
+
+//
+// New element placeholders
+//
+.formeditor-new-element-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    list-style: none;
+}
+
 .formeditor-new-element-container {
     display: flex;
     justify-content: center;
@@ -601,7 +513,7 @@
 }
 
 //
-// Inspector Property Grid
+// Property Grid
 //
 .property-grid {
     .form-control {
@@ -612,24 +524,6 @@
         margin-bottom: 0;
         box-shadow: none;
     }
-}
-
-//
-// Validation Errors
-//
-.formeditor-validation-errors {
-    --typo3-panel-header-color: var(--typo3-panel-danger-header-color);
-    --typo3-panel-header-bg: var(--typo3-panel-danger-header-bg);
-    --typo3-panel-border-color: var(--typo3-panel-danger-border-color);
-    --formeditor-stage-element-bg: var(--typo3-state-danger-bg);
-    --formeditor-stage-element-color: var(--typo3-state-danger-color);
-    --formeditor-stage-element-border-color: var(--typo3-state-danger-border-color);
-    --formeditor-stage-element-hover-bg: var(--typo3-state-danger-hover-bg);
-    --formeditor-stage-element-hover-color: var(--typo3-state-danger-hover-color);
-    --formeditor-stage-element-hover-border-color: var(--typo3-state-danger-hover-border-color);
-    --formeditor-stage-element-active-bg: var(--typo3-state-danger-focus-bg);
-    --formeditor-stage-element-active-color: var(--typo3-state-danger-focus-color);
-    --formeditor-stage-element-active-border-color: var(--typo3-state-danger-focus-border-color);
 }
 
 .property-grid-editor {
@@ -678,5 +572,103 @@
             gap: .25rem;
             flex-direction: column;
         }
+    }
+}
+
+//
+// Preview mode
+//
+.formeditor-module-viewmode-preview {
+    .formeditor-inspector-expand {
+        display: none;
+    }
+
+    & ~ .formeditor-inspector {
+        display: none;
+
+        @media (min-width: 950px) {
+            display: flex;
+            transform: translateX(100%);
+            margin-inline-start: calc(var(--formeditor-module-inspector) * -1 - var(--formeditor-module-gap));
+            opacity: 0;
+        }
+    }
+
+    .formeditor-stage {
+        select[multiple="multiple"] {
+            height: auto;
+            min-height: 32px;
+        }
+
+        textarea {
+            min-height: 100px;
+        }
+
+        .container {
+            width: auto;
+        }
+
+        .form-navigation {
+            .btn-group {
+                span,
+                button {
+                    display: inline-flex;
+                    margin-inline-end: 1em;
+                }
+            }
+        }
+
+        .formeditor-element-preview {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .formeditor-new-element-container {
+            display: none;
+        }
+    }
+}
+
+//
+// Desktop breakpoint
+//
+@media (min-width: 950px) {
+    .formeditor-inner {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--formeditor-module-gap);
+    }
+
+    .formeditor-stage-container {
+        overflow: visible;
+    }
+
+    .formeditor-stage-container-inner {
+        margin-inline: auto;
+        max-width: 800px;
+    }
+
+    .formeditor-inspector {
+        position: sticky;
+        inset: auto;
+        top: calc(1rem + var(--module-docheader-bar-height));
+        width: var(--formeditor-module-inspector);
+        height: auto;
+        flex-shrink: 0;
+        max-height: calc(100dvh - var(--module-docheader-height) - var(--module-body-padding-y) * 2);
+        border-radius: var(--formeditor-inspector-border-radius);
+        border-inline-end: var(--formeditor-inspector-border-width) solid var(--formeditor-inspector-border-color);
+        box-shadow: var(--formeditor-inspector-box-shadow);
+        transform: none;
+        transition: transform .3s ease-out, opacity .3s ease-out, margin .3s ease-out;
+    }
+
+    .formeditor-inspector-collapse {
+        display: none;
+    }
+
+    .formeditor-inspector-expand {
+        display: none;
     }
 }

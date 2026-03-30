@@ -284,12 +284,18 @@ function subscribeEvents(): void {
     topic: string,
     [formElementIdentifierPath]: [string]
   ): void => {
+    if (getViewModel().getPreviewMode()) {
+      return;
+    }
     if (getCurrentlySelectedFormElement().get('__identifierPath') !== formElementIdentifierPath) {
       getFormEditorApp().setCurrentlySelectedFormElement(formElementIdentifierPath);
+      getViewModel().selectStructureNode();
       getViewModel().renewStructure();
       getViewModel().refreshSelectedElementItemsBatch();
       getViewModel().addAbstractViewValidationResults();
+      getViewModel().showInspectorSidebar();
       getViewModel().renderInspectorEditors();
+      getViewModel().focusFirstInspectorInput();
     }
   });
 
@@ -302,7 +308,7 @@ function subscribeEvents(): void {
       targetEvent,
       modalConfiguration
     ]: [
-      'view/insertElements/perform/after' | 'view/insertElements/perform/inside',
+      'view/insertElements/perform/before' | 'view/insertElements/perform/after' | 'view/insertElements/perform/inside',
       InsertElementsModalConfiguration
     ]
   ): void => {
@@ -489,7 +495,9 @@ function subscribeEvents(): void {
       getViewModel().renderAbstractStageArea();
       getViewModel().renderPagination();
       getViewModel().addAbstractViewValidationResults();
+      getViewModel().showInspectorSidebar();
       getViewModel().renderInspectorEditors();
+      getViewModel().focusFirstInspectorInput();
     }
   });
 
@@ -730,10 +738,15 @@ function subscribeEvents(): void {
   ): void => {
     if ('renderables' !== propertyPath) {
       if (!getFormEditorApp().isRootFormElementSelected() && 'label' === propertyPath) {
+        // setTreeNodeTitle() internally calls renew(), so no additional renewStructure() needed
         getViewModel().getStructure().setTreeNodeTitle();
-      } else if (!getFormEditorApp().getUtility().isUndefinedOrNull(formElementIdentifierPath) && getRootFormElement().get('__identifierPath') === formElementIdentifierPath) {
-        getViewModel().setStructureRootElementTitle();
-        getViewModel().setStageHeadline();
+      } else {
+        if (!getFormEditorApp().getUtility().isUndefinedOrNull(formElementIdentifierPath) && getRootFormElement().get('__identifierPath') === formElementIdentifierPath) {
+          getViewModel().setStructureRootElementTitle();
+          getViewModel().setStageHeadline();
+        }
+        // Renew the tree for all other property changes (e.g. renderingOptions.enabled)
+        getViewModel().renewStructure();
       }
 
       if (getViewModel().getPreviewMode()) {
@@ -816,6 +829,20 @@ function subscribeEvents(): void {
         getViewModel().createAndAddFormElement(formElementType, lastRenderable);
       }
     }
+  });
+
+  /**
+   * @publish view/formElement/inserted
+   * @subscribe view/insertElements/perform/before
+   */
+  getPublisherSubscriber().subscribe('view/insertElements/perform/before', (
+    topic: string,
+    [formElementType]: [string]
+  ): void => {
+    let newFormElement;
+    newFormElement = getViewModel().createAndAddFormElement(formElementType, undefined, true);
+    newFormElement = getViewModel().moveFormElement(newFormElement, 'before', getFormEditorApp().getCurrentlySelectedFormElement());
+    getPublisherSubscriber().publish('view/formElement/inserted', [newFormElement]);
   });
 
   /**

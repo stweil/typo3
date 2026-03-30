@@ -24,6 +24,7 @@ import type { FormElementStageItemToolbar } from '@typo3/form/backend/form-edito
 import '@typo3/form/backend/form-editor/component/form-element-stage-item-toolbar';
 import type { PageStageItem } from '@typo3/form/backend/form-editor/component/page-stage-item';
 import '@typo3/form/backend/form-editor/component/page-stage-item';
+import labels from '~labels/form.form_editor_javascript';
 
 import type {
   FormEditor,
@@ -145,6 +146,52 @@ function renderTemplateDispatcher(formElement: FormElement, template: HTMLElemen
 }
 
 /**
+ * Creates a "new element" placeholder <li> rendered at the first position
+ * inside a Page or composite element.
+ *
+ * @param formElement - The parent form element (Page or composite)
+ * @param position - always 'inside': inserts as first child of formElement
+ */
+function createNewElementPlaceholder(formElement: FormElement, position: 'inside' | 'after'): HTMLElement {
+  const listItem = document.createElement('li');
+  listItem.setAttribute('data-no-sorting', 'true');
+  listItem.classList.add('formeditor-new-element-placeholder');
+
+  const buttonLabel = labels.get('formEditor.stage.toolbar.new_element');
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.title = buttonLabel;
+  button.classList.add('btn', 'btn-sm', 'btn-default');
+
+  const icon = document.createElement('typo3-backend-icon');
+  icon.setAttribute('identifier', 'actions-plus');
+  icon.setAttribute('size', 'small');
+  button.append(icon, document.createTextNode(' ' + buttonLabel));
+
+  button.addEventListener('click', function(e) {
+    e.stopPropagation();
+
+    getFormEditorApp().setCurrentlySelectedFormElement(formElement);
+
+    if (position === 'inside') {
+      getPublisherSubscriber().publish('view/stage/abstract/elementToolbar/button/newElement/clicked', [
+        'view/insertElements/perform/inside',
+        { disableElementTypes: [], onlyEnableElementTypes: [] }
+      ]);
+    } else {
+      getPublisherSubscriber().publish('view/stage/abstract/elementToolbar/button/newElement/clicked', [
+        'view/insertElements/perform/after',
+        { disableElementTypes: [], onlyEnableElementTypes: [] }
+      ]);
+    }
+  });
+
+  listItem.append(button);
+  return listItem;
+}
+
+/**
  * @throws 1478987818
  */
 function renderNestedSortableListItem(formElement: FormElement): HTMLElement {
@@ -187,6 +234,9 @@ function renderNestedSortableListItem(formElement: FormElement): HTMLElement {
     templateEl.setAttribute(getHelper().getDomElementDataAttribute('abstractType'), 'isTopLevelFormElement');
   } else {
     templateEl.classList.add('formeditor-element');
+    templateEl.setAttribute('tabindex', '0');
+    templateEl.setAttribute('role', 'button');
+    templateEl.setAttribute('aria-label', (formElement.get('label') || formElement.get('identifier')) + ' (' + getFormElementDefinition(formElement, 'label') + ')');
   }
   if (formElement.get('renderingOptions.enabled') === false) {
     templateEl.classList.add('formeditor-element-hidden');
@@ -197,11 +247,13 @@ function renderNestedSortableListItem(formElement: FormElement): HTMLElement {
   if (!isTopLevelFormElement && !shouldRenderWebComponent
     && !templateEl.querySelector('typo3-form-form-element-stage-item-toolbar')
   ) {
-    const toolbarEl = document.createElement('typo3-form-form-element-stage-item-toolbar');
-    if (isCompositeFormElement) {
-      toolbarEl.setAttribute('is-composite', '');
-    }
-    templateEl.prepend(toolbarEl);
+    const toolbarEl = document.createElement('typo3-form-form-element-stage-item-toolbar') as unknown as FormElementStageItemToolbar;
+    toolbarEl.iconIdentifier = getFormElementDefinition(formElement, 'iconIdentifier') || '';
+    toolbarEl.elementType = getFormElementDefinition(formElement, 'label') || '';
+    toolbarEl.elementIdentifier = formElement.get('identifier') || '';
+    toolbarEl.isHidden = formElement.get('renderingOptions.enabled') === false;
+    toolbarEl.active = true;
+    templateEl.prepend(toolbarEl as unknown as HTMLElement);
   }
 
   listItem.append(templateEl);
@@ -219,7 +271,14 @@ function renderNestedSortableListItem(formElement: FormElement): HTMLElement {
     childList.classList.add(getHelper().getDomElementClassName('sortable'));
     childList.classList.add('formeditor-list');
     const childFormElements = formElement.get('renderables');
-    if (Array.isArray(childFormElements)) {
+    const hasChildren = Array.isArray(childFormElements) && childFormElements.length > 0;
+
+    // Show "Create new element" placeholder when the container (page or composite) is empty.
+    if (!hasChildren) {
+      childList.append(createNewElementPlaceholder(formElement, 'inside'));
+    }
+
+    if (hasChildren) {
       for (let i = 0, len = childFormElements.length; i < len; ++i) {
         childList.append(renderNestedSortableListItem(childFormElements[i]));
       }
@@ -255,6 +314,7 @@ function addSortableEvents(): void {
       dragClass: 'formeditor-sortable-drag',
       ghostClass: 'formeditor-sortable-ghost',
       onStart: function (e) {
+        stageDomElement.classList.add('formeditor-is-dragging');
         getPublisherSubscriber().publish('view/stage/abstract/dnd/start', [e.item as HTMLElement, e.item as HTMLElement]);
       },
       onChange: function (e) {
@@ -285,6 +345,7 @@ function addSortableEvents(): void {
         getPublisherSubscriber().publish('view/stage/abstract/dnd/stop', [
           getAbstractViewFormElementIdentifierPathWithinDomElement(item)
         ]);
+        stageDomElement.classList.remove('formeditor-is-dragging');
       },
     });
   });
@@ -377,7 +438,7 @@ export function renderFormDefinitionPageAsSortableList(pageIndex: number): HTMLE
   assert(typeof pageIndex === 'number', 'Invalid parameter "pageIndex"', 1478721208);
 
   const ol = document.createElement('ol');
-  ol.classList.add('formeditor-list');
+  ol.classList.add('formeditor-stage-list');
   ol.append(renderNestedSortableListItem(getRootFormElement().get('renderables')[pageIndex]));
   return ol;
 }
@@ -438,14 +499,6 @@ export function getAbstractViewFormElementDomElement(formElement?: FormElement |
       getHelper().getDomElementDataAttribute('elementIdentifier', 'bracesWithKeyValue', [formElementIdentifierPath])
     )
     : null;
-}
-
-export function removeAllStageToolbars(): void {
-  // Standalone toolbar web components — deactivated (stay in DOM so event
-  // listeners and the is-composite state survive across selection cycles).
-  stageDomElement?.querySelectorAll('typo3-form-form-element-stage-item-toolbar')
-    .forEach((el) => { (el as unknown as FormElementStageItemToolbar).active = false; });
-  hideFormElementStageItemToolbar();
 }
 
 /**
@@ -543,8 +596,7 @@ export function createAndAddAbstractViewFormElementToolbar(
   }
 
   const stageItem = selectedFormElementDomElement.querySelector('typo3-form-form-element-stage-item') as FormElementStageItem;
-  if (stageItem && stageItem.toolbarConfig) {
-    stageItem.toolbarConfig = { ...stageItem.toolbarConfig, showToolbar: true };
+  if (stageItem) {
     return;
   }
 
@@ -564,17 +616,17 @@ export function createAndAddAbstractViewFormElementToolbar(
   if (!toolbar.dataset.eventsWired) {
     toolbar.dataset.eventsWired = 'true';
 
-    toolbar.addEventListener('toolbar-new-element-after', () => {
+    toolbar.addEventListener('toolbar-new-element-before', () => {
       getPublisherSubscriber().publish('view/stage/abstract/elementToolbar/button/newElement/clicked', [
-        'view/insertElements/perform/after',
+        'view/insertElements/perform/before',
         { disableElementTypes: [] }
       ]);
     });
 
-    toolbar.addEventListener('toolbar-new-element-inside', () => {
+    toolbar.addEventListener('toolbar-new-element-after', () => {
       getPublisherSubscriber().publish('view/stage/abstract/elementToolbar/button/newElement/clicked', [
-        'view/insertElements/perform/inside',
-        { disableElementTypes: [], onlyEnableElementTypes: [] }
+        'view/insertElements/perform/after',
+        { disableElementTypes: [] }
       ]);
     });
 
@@ -583,21 +635,7 @@ export function createAndAddAbstractViewFormElementToolbar(
     });
   }
 
-  toolbar.isComposite = formElementTypeDefinition._isCompositeFormElement || false;
   toolbar.active = true;
-}
-
-export function hideFormElementStageItemToolbar(): void {
-  const webComponents = document.querySelectorAll('typo3-form-form-element-stage-item');
-  webComponents.forEach((component) => {
-    const stageItem = component as FormElementStageItem;
-    if (stageItem.toolbarConfig) {
-      stageItem.toolbarConfig = {
-        ...stageItem.toolbarConfig,
-        showToolbar: false
-      };
-    }
-  });
 }
 
 /**
@@ -624,6 +662,17 @@ export function renderAbstractStageArea(pageIndex: number, callback: () => void)
     getPublisherSubscriber().publish('view/stage/element/clicked', [formElementIdentifierPath]);
   });
 
+  stageDomElement.addEventListener('keydown', function(e: KeyboardEvent) {
+    const target = (e.target as Element).closest<HTMLElement>('.formeditor-element[tabindex]');
+    if (!target) {
+      return;
+    }
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    }
+  });
+
   if (configuration.isSortable) {
     addSortableEvents();
   }
@@ -643,7 +692,6 @@ export function renderAbstractStageArea(pageIndex: number, callback: () => void)
  */
 export function renderPreviewStageArea(html: string): void {
   assert(getUtility().isNonEmptyString(html), 'Invalid parameter "html"', 1475424409);
-
   stageDomElement.replaceChildren();
   stageDomElement.innerHTML = html;
 
@@ -831,28 +879,31 @@ export function renderFormElementStageItem(formElement: FormElement, template: H
     stageItem.classList.add('formeditor-element-hidden');
   }
 
-  stageItem.toolbarConfig = {
-    showToolbar: false,
-    isCompositeElement: getFormElementDefinition(formElement, '_isCompositeFormElement') || false,
-  };
+  // Check if form element has validation errors
+  const validationResults = getFormEditorApp().validateFormElement(formElement);
+  let hasValidationError = false;
+  for (let i = 0, len = validationResults.length; i < len; ++i) {
+    if (
+      validationResults[i].validationResults
+      && validationResults[i].validationResults.length > 0
+    ) {
+      hasValidationError = true;
+      break;
+    }
+  }
+  stageItem.invalid = hasValidationError;
 
-  // Register event listeners for toolbar actions
-  stageItem.addEventListener('toolbar-new-element-after', () => {
+  stageItem.addEventListener('toolbar-new-element-before', () => {
     getPublisherSubscriber().publish('view/stage/abstract/elementToolbar/button/newElement/clicked', [
-      'view/insertElements/perform/after',
-      {
-        disableElementTypes: []
-      }
+      'view/insertElements/perform/before',
+      { disableElementTypes: [] }
     ]);
   });
 
-  stageItem.addEventListener('toolbar-new-element-inside', () => {
+  stageItem.addEventListener('toolbar-new-element-after', () => {
     getPublisherSubscriber().publish('view/stage/abstract/elementToolbar/button/newElement/clicked', [
-      'view/insertElements/perform/inside',
-      {
-        disableElementTypes: [],
-        onlyEnableElementTypes: []
-      }
+      'view/insertElements/perform/after',
+      { disableElementTypes: [] }
     ]);
   });
 
@@ -1153,8 +1204,11 @@ declare global {
       formElementIdentifierPath: string
     ];
     'view/stage/abstract/elementToolbar/button/newElement/clicked': readonly [
-      targetEvent: 'view/insertElements/perform/after' | 'view/insertElements/perform/inside',
+      targetEvent: 'view/insertElements/perform/before' | 'view/insertElements/perform/after' | 'view/insertElements/perform/inside',
       modalConfiguration: InsertElementsModalConfiguration
+    ];
+    'view/insertElements/perform/before': readonly [
+      formElementType: string
     ];
     'view/insertElements/perform/after': readonly [
       formElementType: string

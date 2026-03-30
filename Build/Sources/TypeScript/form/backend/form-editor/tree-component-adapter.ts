@@ -150,6 +150,30 @@ export function renew(formElement?: FormElement): void {
 }
 
 /**
+ * Select a tree node without rebuilding the entire tree.
+ *
+ * Use this when only the selection needs to change (e.g. stage element clicked).
+ *
+ * @param formElement - Form element to select (defaults to currently selected)
+ */
+export function selectTreeNode(formElement?: FormElement): void {
+  if (!treeContainer) {
+    return;
+  }
+
+  let element = formElement;
+  if (!element) {
+    try {
+      element = getCurrentlySelectedFormElement();
+    } catch {
+      return;
+    }
+  }
+
+  treeContainer.setSelectedNode(element.get('__identifierPath'));
+}
+
+/**
  * Set tree node title (update label)
  *
  * Updates the label of a form element and refreshes the tree to reflect the change.
@@ -219,8 +243,8 @@ export function getAllTreeNodes(): NodeListOf<HTMLElement> {
 /**
  * Set validation error state for a tree node
  *
- * Marks a node as having a validation error. The tree component will add
- * the 'formeditor-validation-errors' CSS class to highlight the node.
+ * Marks a node as having a validation error. The tree component will
+ * highlight the node accordingly.
  *
  * @param identifierPath - Full identifier path of the node
  * @param hasError - Whether the node has a direct validation error
@@ -235,7 +259,7 @@ export function setNodeValidationError(identifierPath: string, hasError: boolean
  * Set child-has-error state for a tree node
  *
  * Marks a node as having a child with a validation error. The tree component
- * will add the 'formeditor-validation-child-has-error' CSS class.
+ * will highlight the node accordingly.
  *
  * @param identifierPath - Full identifier path of the node
  * @param childHasError - Whether a child node has a validation error
@@ -446,6 +470,7 @@ export function bootstrap(
 
   return {
     renew,
+    selectTreeNode,
     setTreeNodeTitle,
     getTreeNode,
     getAllTreeNodes,

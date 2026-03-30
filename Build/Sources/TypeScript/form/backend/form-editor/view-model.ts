@@ -54,9 +54,7 @@ const configuration: Partial<HelperConfiguration> = {
     selectedStagePanel: 't3-form-form-stage-selected',
     sortableHover: 'sortable-hover',
     viewModeAbstract: 'formeditor-module-viewmode-abstract',
-    viewModePreview: 'formeditor-module-viewmode-preview',
-    validationErrors: 'formeditor-validation-errors',
-    validationChildHasErrors: 'formeditor-validation-child-has-error'
+    viewModePreview: 'formeditor-module-viewmode-preview'
   },
   domElementDataAttributeNames: {
     abstractType: 'data-element-abstract-type'
@@ -70,10 +68,10 @@ const configuration: Partial<HelperConfiguration> = {
     buttonHeaderUndo: 'undoButton',
     buttonHeaderViewModeAbstract: 'buttonViewModeAbstract',
     buttonHeaderViewModePreview: 'buttonViewModePreview',
-    buttonStageNewElementBottom: 'stageNewElementBottom',
     buttonFormSettings: 'formSettings',
     buttonToggleStructure: 'formeditorStructureToggle',
-    buttonToggleInspector: 'formeditorInspectorToggle',
+    buttonExpandInspector: 'formeditorInspectorExpand',
+    buttonCollapseInspector: 'formeditorInspectorCollapse',
     buttonNewPage: 'newPage',
     iconMailform: 'content-form',
     iconSave: 'actions-document-save',
@@ -84,7 +82,6 @@ const configuration: Partial<HelperConfiguration> = {
     stageArea: 'stageArea',
     stageContainer: 'stageContainer',
     stageContainerInner: 'stageContainerInner',
-    stageNewElementRow: 'stageNewElementRow',
     stagePanelHeading: 'panelHeading',
     stageSection: 'stageSection',
     structure: 'structure-element',
@@ -414,20 +411,16 @@ function buttonsSetup(): void {
     getPublisherSubscriber().publish('view/header/button/save/clicked', []);
   });
 
-  qs('buttonStageNewElementBottom')?.addEventListener('click', function() {
-    getPublisherSubscriber().publish(
-      'view/stage/abstract/button/newElement/clicked', [
-        'view/insertElements/perform/bottom'
-      ]
-    );
-  });
-
   qs('buttonToggleStructure')?.addEventListener('click', function() {
-    qs('structureSection')?.classList.toggle('formeditor-sidebar-expanded');
+    qs('structureSection')?.classList.toggle('formeditor-inspector-expanded');
   });
 
-  qs('buttonToggleInspector')?.addEventListener('click', function() {
-    qs('inspectorSection')?.classList.toggle('formeditor-sidebar-expanded');
+  qs('buttonExpandInspector')?.addEventListener('click', function() {
+    qs('inspectorSection')?.classList.add('formeditor-inspector-expanded');
+  });
+
+  qs('buttonCollapseInspector')?.addEventListener('click', function() {
+    qs('inspectorSection')?.classList.remove('formeditor-inspector-expanded');
   });
 
   qs('buttonFormSettings')?.addEventListener('click', function() {
@@ -523,6 +516,10 @@ export function getStructure(): typeof TreeComponent {
 export function renewStructure(): void {
   getStructure().renew();
   getPublisherSubscriber().publish('view/structure/renew/postProcess');
+}
+
+export function selectStructureNode(formElement?: FormElement): void {
+  getStructure().selectTreeNode(formElement);
 }
 
 export function addStructureSelection(formElement?: FormElement): void {
@@ -671,11 +668,16 @@ export function renderInspectorEditors(formElement?: FormElement | string): void
   getInspector().renderEditors(formElement);
 }
 
-export function showInspectorSidebar(): void {
-  // Expand inspector sidebar if expander button is visible
-  if (document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonToggleInspector'))?.getClientRects().length === 1) {
-    document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('inspectorSection')).classList.add('formeditor-sidebar-expanded');
+export function focusFirstInspectorInput(): void {
+  const inspectorSection = document.querySelector(getHelper().getDomElementDataIdentifierSelector('inspectorSection'));
+  if (inspectorSection) {
+    const firstInput = inspectorSection.querySelector<HTMLElement>('input, select, textarea');
+    firstInput?.focus();
   }
+}
+
+export function showInspectorSidebar(): void {
+  document.querySelector(getHelper().getDomElementDataIdentifierSelector('inspectorSection'))?.classList.add('formeditor-inspector-expanded');
 }
 
 export function renderInspectorCollectionElementEditors(
@@ -751,11 +753,7 @@ export function renderAbstractStageArea(): void {
       && !formElementTypeDefinition._isCompositeFormElement
       && !getFormEditorApp().isRootFormElementSelected()
     ) {
-      hideComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonStageNewElementBottom')));
-      hideComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('stageNewElementRow')));
-    } else {
-      showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonStageNewElementBottom')));
-      showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('stageNewElementRow')));
+      // Non-composite top-level elements don't allow adding children
     }
 
     refreshSelectedElementItemsBatch();
@@ -781,7 +779,6 @@ export function renderPreviewStageArea(html: string): void {
   document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('moduleWrapper'))
     ?.classList.remove(getHelper().getDomElementClassName('viewModeAbstract'));
 
-  hideComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonStageNewElementBottom')));
   getStage().renderPreviewStageArea(html);
   getPublisherSubscriber().publish('view/stage/preview/render/postProcess');
 }
@@ -999,7 +996,6 @@ export function removePropertyCollectionElement(
 export function refreshSelectedElementItemsBatch(): void {
   const formElementTypeDefinition = getFormElementDefinition(getCurrentlySelectedFormElement(), undefined);
 
-  getStage().removeAllStageToolbars();
   removeAllStageElementSelectionsBatch();
   removeAllStructureSelections();
 
@@ -1049,8 +1045,6 @@ export function removeAllStageElementSelectionsBatch(): void {
 }
 
 export function onViewReadyBatch(): void {
-  hideComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonStageNewElementBottom')));
-  hideComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('stageNewElementRow')));
 
   setStageHeadline();
   setStructureRootElementTitle();
@@ -1062,6 +1056,7 @@ export function onViewReadyBatch(): void {
 
   hideComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('moduleLoadingIndicator')));
   showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('moduleWrapper')));
+  showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('inspectorSection')));
   showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderSave')));
   showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderClose')));
   showComponent(document.querySelector<HTMLElement>(getHelper().getDomElementDataIdentifierSelector('buttonHeaderUndo')));
@@ -1188,7 +1183,7 @@ export function closeEditor(): void {
 
 export function setElementValidationErrorClass(element: HTMLElement | null, classIdentifier?: string): void {
   if (getFormEditorApp().getUtility().isUndefinedOrNull(classIdentifier)) {
-    element?.classList.add(getHelper().getDomElementClassName('validationErrors'));
+    element?.classList.replace('panel-default', 'panel-danger');
   } else {
     element?.classList.add(getHelper().getDomElementClassName(classIdentifier));
   }
@@ -1196,7 +1191,7 @@ export function setElementValidationErrorClass(element: HTMLElement | null, clas
 
 export function removeElementValidationErrorClass(element: HTMLElement | null, classIdentifier?: string): void {
   if (getFormEditorApp().getUtility().isUndefinedOrNull(classIdentifier)) {
-    element?.classList.remove(getHelper().getDomElementClassName('validationErrors'));
+    element?.classList.replace('panel-danger', 'panel-default');
   } else {
     element?.classList.remove(getHelper().getDomElementClassName(classIdentifier));
   }
