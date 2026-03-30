@@ -49,33 +49,18 @@ export class FormEditorTreeContainer extends LitElement {
     }
   }
 
-  /**
-   * Set validation error state for a node
-   *
-   * @param identifierPath - Full identifier path of the node
-   * @param hasError - Whether the node has a direct validation error
-   */
   public setNodeValidationError(identifierPath: string, hasError: boolean = true): void {
     if (this.tree) {
       this.tree.setNodeValidationError(identifierPath, hasError);
     }
   }
 
-  /**
-   * Set child-has-error state for a node
-   *
-   * @param identifierPath - Full identifier path of the node
-   * @param childHasError - Whether a child node has a validation error
-   */
   public setNodeChildHasError(identifierPath: string, childHasError: boolean = true): void {
     if (this.tree) {
       this.tree.setNodeChildHasError(identifierPath, childHasError);
     }
   }
 
-  /**
-   * Clear all validation error states
-   */
   public clearAllValidationErrors(): void {
     if (this.tree) {
       this.tree.clearAllValidationErrors();
@@ -118,4 +103,3 @@ declare global {
     'typo3-form-editor-tree-container': FormEditorTreeContainer;
   }
 }
-

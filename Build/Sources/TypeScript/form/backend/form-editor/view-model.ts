@@ -579,13 +579,6 @@ export function setStructureRootElementTitle(title?: string): void {
 export function addStructureValidationResults(): void {
   getStructure().clearAllValidationErrors();
 
-  getStructure().getAllTreeNodes().forEach((node) => {
-    node.classList.remove(getHelper().getDomElementClassName('validationErrors'));
-    node.classList.remove(getHelper().getDomElementClassName('validationChildHasErrors'));
-  });
-
-  removeElementValidationErrorClass(getStructureRootContainer());
-
   const validationResults = getFormEditorApp().validateFormElementRecursive(getRootFormElement());
   for (let i = 0, len = validationResults.length; i < len; ++i) {
     let hasError = false;
@@ -600,32 +593,17 @@ export function addStructureValidationResults(): void {
     }
 
     if (hasError) {
-      if (i === 0) {
-        setElementValidationErrorClass(getStructureRootContainer());
-      } else {
-        const identifierPath = validationResults[i].formElementIdentifierPath;
+      const identifierPath = validationResults[i].formElementIdentifierPath;
 
-        // Use new tree component method to set validation error
-        getStructure().setNodeValidationError(identifierPath, true);
+      // Set validation error on the tree node (adds CSS class + overlay icon)
+      getStructure().setNodeValidationError(identifierPath, true);
 
-        // Also set legacy CSS class for backward compatibility
-        const validationElement = getStructure().getTreeNode(identifierPath);
-        setElementValidationErrorClass(validationElement);
-
-        // Mark all parent nodes as having a child with error
-        const pathParts = identifierPath.split('/');
-        while (pathParts.pop()) {
-          const parentPath = pathParts.join('/');
-          if (parentPath) {
-            // Use new tree component method
-            getStructure().setNodeChildHasError(parentPath, true);
-
-            // Also set legacy CSS class for backward compatibility
-            const parentElement = getStructure().getTreeNode(parentPath);
-            if (typeof parentElement === 'object' && parentElement !== null && !Array.isArray(parentElement)) {
-              setElementValidationErrorClass(parentElement, 'validationChildHasErrors');
-            }
-          }
+      // Mark all parent nodes as having a child with error
+      const pathParts = identifierPath.split('/');
+      while (pathParts.pop()) {
+        const parentPath = pathParts.join('/');
+        if (parentPath) {
+          getStructure().setNodeChildHasError(parentPath, true);
         }
       }
     }
@@ -825,6 +803,14 @@ export function addAbstractViewValidationResults(): void {
     if (hasError) {
       if (i > 0) {
         const validationElement = getStage().getAbstractViewFormElementDomElement(validationResults[i].formElementIdentifierPath);
+
+        // Set invalid property on Lit web component (FormElementStageItem)
+        const stageItem = validationElement.querySelector('typo3-form-form-element-stage-item') as HTMLElement | null;
+        if (stageItem && 'invalid' in stageItem) {
+          (stageItem as any).invalid = true;
+        }
+
+        // Also set legacy CSS class for backward compatibility (legacy templates)
         setElementValidationErrorClass(validationElement);
       }
     }

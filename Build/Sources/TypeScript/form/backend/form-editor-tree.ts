@@ -19,7 +19,9 @@ import { Tree, type DataTransferStringItem } from '@typo3/backend/tree/tree';
 import type { TreeNodeInterface } from '@typo3/backend/tree/tree-node';
 import { TreeNodePositionEnum } from '@typo3/backend/tree/tree-node';
 import { DataTransferTypes } from '@typo3/backend/enum/data-transfer-types';
+import Severity from '@typo3/backend/severity';
 import { FORM_EDITOR_TREE_EVENTS } from './form-editor-tree-events';
+import labels from '~labels/form.form_editor_javascript';
 
 /**
  * Interface for FormEditor tree nodes
@@ -43,24 +45,11 @@ export interface FormEditorTreeNode {
 interface NodeMetadata {
   isComposite: boolean;
   isTopLevel: boolean;
-  originalOverlayIcon: string;
-}
-
-/**
- * Validation state for a node
- */
-interface NodeValidationState {
-  hasError: boolean;
-  childHasError: boolean;
 }
 
 const ROOT_DEPTH = 0;
 const TOP_LEVEL_DEPTH = 1;
 
-const VALIDATION_ERROR_CLASS = 'node-validation-error';
-const VALIDATION_CHILD_ERROR_CLASS = 'node-validation-error';
-
-const VALIDATION_ERROR_ICON = 'overlay-missing';
 
 /**
  * FormEditor Tree Component
@@ -72,7 +61,8 @@ const VALIDATION_ERROR_ICON = 'overlay-missing';
 @customElement('typo3-backend-navigation-component-formeditor-tree')
 export class FormEditorTree extends Tree {
   private readonly nodeMetadata: Map<string, NodeMetadata> = new Map();
-  private readonly nodeValidationState: Map<string, NodeValidationState> = new Map();
+  private readonly validationErrors: Set<string> = new Set();
+  private readonly childValidationErrors: Set<string> = new Set();
 
   /**
    * Constructor - Initialize tree settings
@@ -116,6 +106,9 @@ export class FormEditorTree extends Tree {
     // Cast is safe because enhanceNodes() adds all missing properties
     this.nodes = this.enhanceNodes(basicNodes as TreeNodeInterface[]);
 
+    // Re-apply validation state from persistent sets onto the new nodes
+    this.applyValidationState();
+
     this.requestUpdate();
   }
 
@@ -134,108 +127,77 @@ export class FormEditorTree extends Tree {
   /**
    * Set validation error state for a node
    *
-   * Marks a node as having a validation error. This will add the appropriate
-   * CSS class to highlight the node in red and show an error overlay icon.
+   * Adds a statusInformation entry with error severity to highlight the node.
    *
    * @param identifierPath - Full identifier path of the node
    * @param hasError - Whether the node has a direct validation error
    */
   public setNodeValidationError(identifierPath: string, hasError: boolean = true): void {
-    const currentState = this.nodeValidationState.get(identifierPath) || { hasError: false, childHasError: false };
-    currentState.hasError = hasError;
-    this.nodeValidationState.set(identifierPath, currentState);
-
-    // Update the node's overlayIcon to show error state
-    const node = this.nodes.find(n => n.identifier === identifierPath);
-    if (node) {
-      this.updateNodeOverlayIcon(node, hasError);
+    if (hasError) {
+      this.validationErrors.add(identifierPath);
+    } else {
+      this.validationErrors.delete(identifierPath);
     }
-
+    this.applyValidationState();
     this.requestUpdate();
   }
 
   /**
    * Set child-has-error state for a node
    *
-   * Marks a node as having a child with a validation error. This will add
-   * a CSS class to indicate the error state in a subtler way (e.g., red text).
-   *
    * @param identifierPath - Full identifier path of the node
    * @param childHasError - Whether a child node has a validation error
    */
   public setNodeChildHasError(identifierPath: string, childHasError: boolean = true): void {
-    const currentState = this.nodeValidationState.get(identifierPath) || { hasError: false, childHasError: false };
-    currentState.childHasError = childHasError;
-    this.nodeValidationState.set(identifierPath, currentState);
+    if (childHasError) {
+      this.childValidationErrors.add(identifierPath);
+    } else {
+      this.childValidationErrors.delete(identifierPath);
+    }
+    this.applyValidationState();
     this.requestUpdate();
   }
 
   /**
    * Clear all validation error states
    *
-   * Removes all validation error markers from the tree.
    * Typically called before re-validating the form.
    */
   public clearAllValidationErrors(): void {
-    // Clear overlay icons on all nodes that had errors
-    this.nodeValidationState.forEach((state, identifierPath) => {
-      if (state.hasError) {
-        const node = this.nodes.find(n => n.identifier === identifierPath);
-        if (node) {
-          this.updateNodeOverlayIcon(node, false);
-        }
-      }
-    });
-
-    this.nodeValidationState.clear();
+    this.validationErrors.clear();
+    this.childValidationErrors.clear();
+    this.applyValidationState();
     this.requestUpdate();
   }
 
   /**
-   * Update a node's overlay icon based on validation error state
-   *
-   * Sets or removes the error overlay icon. If the node already has an overlay
-   * (e.g., 'overlay-hidden' for disabled elements), the error icon takes precedence
-   * when there's an error, otherwise the original overlay is restored.
-   *
-   * @param node - Tree node to update
-   * @param hasError - Whether the node has a validation error
+   * Apply persistent validation state onto the current nodes' statusInformation.
+   * Called after setNodes() rebuilds nodes and after any validation state change.
    */
-  private updateNodeOverlayIcon(node: TreeNodeInterface, hasError: boolean): void {
-    const originalOverlay = this.getOriginalOverlayIcon(node);
+  private applyValidationState(): void {
+    for (const node of this.nodes) {
+      node.statusInformation = [];
+      node.overlayIcon = node.overlayIcon === 'overlay-missing' ? '' : node.overlayIcon;
 
-    if (hasError) {
-      node.overlayIcon = VALIDATION_ERROR_ICON;
-    } else {
-      node.overlayIcon = originalOverlay;
+      if (this.validationErrors.has(node.identifier)) {
+        node.overlayIcon = 'overlay-missing';
+        node.statusInformation.push({
+          label: labels.get('formEditor.validation.hasError') || 'Has validation errors',
+          icon: 'actions-exclamation-circle',
+          overlayIcon: '',
+          severity: Severity.error,
+          priority: 2,
+        });
+      } else if (this.childValidationErrors.has(node.identifier)) {
+        node.statusInformation.push({
+          label: labels.get('formEditor.validation.childHasError') || 'Contains elements with validation errors',
+          icon: 'actions-dot',
+          overlayIcon: '',
+          severity: Severity.warning,
+          priority: 1,
+        });
+      }
     }
-  }
-
-  /**
-   * Get the original overlay icon for a node (before validation errors)
-   *
-   * Returns the original overlay icon that was stored when the node was created.
-   * This is used to restore the overlay when validation errors are cleared.
-   *
-   * @param node - Tree node to check
-   * @returns Original overlay icon identifier (e.g., 'overlay-hidden' for disabled elements)
-   */
-  private getOriginalOverlayIcon(node: TreeNodeInterface): string {
-    const metadata = this.nodeMetadata.get(node.identifier);
-    if (metadata) {
-      return metadata.originalOverlayIcon;
-    }
-    return '';
-  }
-
-  /**
-   * Get the validation state for a node
-   *
-   * @param identifierPath - Full identifier path of the node
-   * @returns The validation state or null if no state is set
-   */
-  public getNodeValidationState(identifierPath: string): NodeValidationState | null {
-    return this.nodeValidationState.get(identifierPath) || null;
   }
 
   /**
@@ -474,33 +436,6 @@ export class FormEditorTree extends Tree {
   protected override async firstUpdated(): Promise<void> {
     // Base class handles localStorage state restoration via getNodeStatus()
     await super.firstUpdated();
-  }
-
-  /**
-   * Override getNodeClasses to add validation error styling
-   *
-   * Adds CSS classes for validation errors:
-   * - 'formeditor-validation-errors': Node has a direct validation error
-   * - 'formeditor-validation-child-has-error': A child node has an error
-   *
-   * @param node - Tree node to get classes for
-   * @returns Array of CSS class names
-   */
-  protected override getNodeClasses(node: TreeNodeInterface): string[] {
-    const classes = super.getNodeClasses(node);
-
-    // Add validation error classes based on node state
-    const validationState = this.nodeValidationState.get(node.identifier);
-    if (validationState) {
-      if (validationState.hasError) {
-        classes.push(VALIDATION_ERROR_CLASS);
-      }
-      if (validationState.childHasError) {
-        classes.push(VALIDATION_CHILD_ERROR_CLASS);
-      }
-    }
-
-    return classes;
   }
 
   /**
@@ -792,14 +727,10 @@ export class FormEditorTree extends Tree {
     const result: Partial<TreeNodeInterface>[] = [];
 
     nodes.forEach((node) => {
-      // Determine the original overlay icon based on enabled state
-      const originalOverlayIcon = node.enabled === false ? 'overlay-hidden' : '';
-
-      // Store FormEditor-specific metadata (needed for drag & drop validation and overlay restoration)
+      // Store FormEditor-specific metadata (needed for drag & drop validation)
       this.nodeMetadata.set(node.identifierPath, {
         isComposite: node.isComposite,
         isTopLevel: node.isTopLevel,
-        originalOverlayIcon: originalOverlayIcon
       });
 
       // Create basic tree node with only essential properties

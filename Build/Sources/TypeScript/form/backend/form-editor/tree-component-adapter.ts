@@ -125,8 +125,8 @@ export function renew(formElement?: FormElement): void {
   const nodes = buildTreeNodes();
 
   // Use requestAnimationFrame to ensure DOM is ready
-  requestAnimationFrame(() => {
-    treeContainer.setNodes(nodes);
+  requestAnimationFrame(async () => {
+    await treeContainer.setNodes(nodes);
 
     let currentElement = formElement;
     if (!currentElement) {
@@ -142,6 +142,10 @@ export function renew(formElement?: FormElement): void {
       const identifierPath = currentElement.get('__identifierPath');
       treeContainer.setSelectedNode(identifierPath);
     }
+
+    // Publish after setNodes() completed so validation subscribers
+    // operate on a fully rendered tree with this.tree available.
+    getPublisherSubscriber().publish('view/structure/renew/postProcess');
   });
 }
 

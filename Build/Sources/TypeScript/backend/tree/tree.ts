@@ -1206,9 +1206,8 @@ export class Tree extends LitElement {
     const overlayIconIdentifier = firstInformation.overlayIcon !== '' ? firstInformation.overlayIcon : undefined;
 
     return html`
-      <span class="node-information">
+      <span class="node-information node-information-${severityClass}">
         <typo3-backend-icon
-          class="text-${severityClass}"
           identifier=${iconIdentifier}
           overlay=${ifDefined(overlayIconIdentifier)}
           size="small"

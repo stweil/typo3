@@ -14,11 +14,12 @@
     --tree-node-selected-color: var(--typo3-component-active-color);
     --tree-node-selected-bg: var(--typo3-component-active-bg);
     --tree-node-selected-border-color: var(--typo3-component-active-border-color);
-    // node validation error
-    --tree-node-validation-error-color: var(--typo3-text-color-danger);
-    --tree-node-validation-error-hover-color: var(--typo3-text-color-danger);
-    --tree-node-validation-error-focus-color: var(--typo3-text-color-danger);
-    --tree-node-validation-error-selected-color: var(--typo3-text-color-danger);
+    // information
+    --tree-node-information: var(--tree-node-color);
+    --tree-node-information-success: var(--typo3-text-color-success);
+    --tree-node-information-warning: var(--typo3-text-color-warning);
+    --tree-node-information-danger: var(--typo3-text-color-danger);
+    --tree-node-information-info: var(--typo3-text-color-info);
     // special
     --tree-info-bg: var(--typo3-surface-info);
     --tree-info-color: var(--typo3-surface-info-text);
@@ -146,6 +147,10 @@ typo3-backend-navigation-component-formeditortree {
         --tree-node-color: var(--tree-node-selected-color) !important;
         --tree-node-bg: var(--tree-node-selected-bg) !important;
         --tree-node-border-color: var(--tree-node-selected-border-color) !important;
+
+        .node-information {
+            --tree-node-information: var(--tree-node-selected-color) !important;
+        }
         outline: 1px solid;
     }
 
@@ -194,13 +199,6 @@ typo3-backend-navigation-component-formeditortree {
                 bottom: 0;
             }
         }
-    }
-
-    &-validation-error {
-        --tree-node-color: var(--tree-node-validation-error-color);
-        --tree-node-hover-color: var(--tree-node-validation-error-hover-color);
-        --tree-node-focus-color: var(--tree-node-validation-error-focus-color);
-        --tree-node-selected-color: var(--tree-node-validation-error-selected-color);
     }
 }
 
@@ -364,6 +362,23 @@ typo3-backend-navigation-component-formeditortree {
     gap: .15rem;
     padding-inline-start: .25rem;
     opacity: .75;
+    color: var(--tree-node-information);
+
+    &-success {
+        --tree-node-information: var(--tree-node-information-success);
+    }
+
+    &-warning {
+        --tree-node-information: var(--tree-node-information-warning);
+    }
+
+    &-danger {
+        --tree-node-information: var(--tree-node-information-danger);
+    }
+
+    &-info {
+        --tree-node-information: var(--tree-node-information-info);
+    }
 }
 
 .node-action {
