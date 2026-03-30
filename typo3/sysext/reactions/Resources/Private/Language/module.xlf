@@ -28,7 +28,7 @@
         <source>Create new reaction</source>
       </trans-unit>
       <trans-unit id="reaction_not_found_with_filter.title">
-        <source>No reactions found!</source>
+        <source>No reactions found</source>
       </trans-unit>
       <trans-unit id="reaction_not_found_with_filter.message">
         <source>With the current set of filters applied, no reactions could be found.</source>
