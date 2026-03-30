@@ -683,7 +683,7 @@ export function renderCollectionElementEditors(
     collectionElementIdentifier,
     collectionName
   );
-  if (!Array.isArray(collectionElementConfiguration.editors)) {
+  if (!collectionElementConfiguration || !Array.isArray(collectionElementConfiguration.editors)) {
     return;
   }
 
@@ -942,12 +942,13 @@ export function renderCollectionElementHeaderEditor(
       iconPlaceholder?.remove();
     }
 
-    const editors = getFormEditorApp().getPropertyCollectionElementConfiguration(
+    const collectionConfig = getFormEditorApp().getPropertyCollectionElementConfiguration(
       collectionElementIdentifier,
       collectionName
-    ).editors;
+    );
+    const editors = collectionConfig?.editors;
 
-    if (!(
+    if (editors && !(
       (editors.length === 2 && editors[0].identifier === 'header' && editors[1].identifier === 'removeButton') ||
       (editors.length === 1 && editors[0].identifier === 'header')
     )) {
