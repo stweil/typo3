@@ -102,6 +102,11 @@ export class FormEngineStep implements WizardStepInterface, WizardStepAfterRende
           this.context.wizard.requestUpdate();
         });
 
+        form.addEventListener('submit', (e: Event) => {
+          e.preventDefault();
+          this.context.wizard.goToNextStep();
+        });
+
         const firstErrorElement = form.querySelector('.has-error') as HTMLInputElement;
         if (firstErrorElement) {
           firstErrorElement.focus();

@@ -150,6 +150,18 @@ export class Wizard extends LitElement {
     `;
   }
 
+  public goToNextStep(): void {
+    if (this.currentStepIndex < this.allSteps.length - 1) {
+      this.goToStep(this.currentStepIndex + 1);
+    }
+  }
+
+  public goToPreviousStep(): void {
+    if (this.currentStepIndex > 0) {
+      this.goToStep(this.currentStepIndex - 1);
+    }
+  }
+
   protected override createRenderRoot(): HTMLElement | DocumentFragment {
     return this;
   }
@@ -321,18 +333,6 @@ export class Wizard extends LitElement {
     this.currentStep = this.allSteps[targetIndex];
 
     await this.updateComplete;
-  }
-
-  private goToNextStep(): void {
-    if (this.currentStepIndex < this.allSteps.length - 1) {
-      this.goToStep(this.currentStepIndex + 1);
-    }
-  }
-
-  private goToPreviousStep(): void {
-    if (this.currentStepIndex > 0) {
-      this.goToStep(this.currentStepIndex - 1);
-    }
   }
 
   private getProgressSteps(): Array<{key: string, title: string}> {
